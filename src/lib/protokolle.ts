@@ -15,6 +15,8 @@ export type Sitzung = {
   einladungen: Einladung[]   // nur für Verwaltung/Schriftführung befüllt
 }
 
+const TYP_RANG: Record<string, number> = { einladung: 0, protokoll: 1, beilage: 2 }
+
 export async function ladeGremien(): Promise<Gremium[]> {
   const supabase = await createSupabaseServerClient()
   const { data } = await supabase.from('gremien').select('*').order('sortierung')
@@ -34,7 +36,7 @@ export async function ladeSitzungen(opts: { gremium?: string; jahr?: number; lim
   const { data } = await q
   return ((data ?? []) as R[]).map(s => ({
     ...s,
-    protokolle: ((s.protokolle ?? []) as Protokoll[]).sort((a, b) => a.typ.localeCompare(b.typ) || a.dateiname.localeCompare(b.dateiname)),
+    protokolle: ((s.protokolle ?? []) as Protokoll[]).sort((a, b) => (TYP_RANG[a.typ] ?? 9) - (TYP_RANG[b.typ] ?? 9) || a.dateiname.localeCompare(b.dateiname)),
     einladungen: ((s.einladungen ?? []) as Einladung[]).sort((a, b) => `${a.profil?.nachname} ${a.profil?.vorname}`.localeCompare(`${b.profil?.nachname} ${b.profil?.vorname}`)),
   })) as Sitzung[]
 }

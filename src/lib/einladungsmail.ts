@@ -11,6 +11,7 @@ export type EinladungsDaten = {
   ort: string | null
   anzahlDokumente: number
   link: string              // persönlicher Bestätigungslink
+  anhangName?: string | null // Dateiname der offiziellen Einladung (Anhang)
 }
 
 function esc(s: string) {
@@ -31,6 +32,7 @@ export function baueEinladungsmail(d: EinladungsDaten) {
     `${d.titel}`,
     `${d.gremium} · ${wann}${d.ort ? ` · ${d.ort}` : ''}`,
     `${d.anzahlDokumente} Dokument${d.anzahlDokumente === 1 ? '' : 'e'}`,
+    ...(d.anhangName ? [``, `Die offizielle Einladung mit Tagesordnung finden Sie im Anhang (${d.anhangName}).`] : []),
     ``,
     `Bitte bestätigen Sie den Zugriff über Ihren persönlichen Link:`,
     d.link,
@@ -57,6 +59,7 @@ export function baueEinladungsmail(d: EinladungsDaten) {
       <p style="margin:0;font-size:14px">${esc(wann)}${d.ort ? ` · ${esc(d.ort)}` : ''}</p>
       <p style="margin:6px 0 0;font-size:13px;color:#5b6675">${d.anzahlDokumente} Dokument${d.anzahlDokumente === 1 ? '' : 'e'}</p>
     </td></tr></table>
+    ${d.anhangName ? `<p style="font-size:14px;margin:0 0 20px">Die offizielle Einladung mit Tagesordnung finden Sie im Anhang (<strong>${esc(d.anhangName)}</strong>).</p>` : ''}
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px"><tr><td style="background:#004B72;border-radius:6px">
       <a href="${esc(d.link)}" style="display:inline-block;padding:13px 26px;color:#fff;font-size:15px;font-weight:bold;text-decoration:none">JA, ich möchte zugreifen</a>
     </td></tr></table>

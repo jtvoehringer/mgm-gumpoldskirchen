@@ -9,7 +9,7 @@ import { baueEinladungsmail } from '@/lib/einladungsmail'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type R = Record<string, any>
-export type AktionState = { ok?: boolean; fehler?: string; info?: string }
+export type AktionState = { ok?: boolean; fehler?: string; info?: string; id?: string }
 
 async function verwaltungPflicht() {
   const p = await getProfil()
@@ -160,14 +160,14 @@ export async function sitzungAnlegenAction(_p: AktionState, form: FormData): Pro
     const f = (k: string) => String(form.get(k) ?? '').trim()
     if (!f('gremium_id') || !f('datum') || !f('titel')) return { fehler: 'Gremium, Datum und Titel sind Pflicht.' }
     const supabase = await createSupabaseServerClient()
-    const { error } = await supabase.from('sitzungen').insert({
+    const { data, error } = await (supabase.from('sitzungen') as R).insert({
       gremium_id: f('gremium_id'), datum: f('datum'), uhrzeit: f('uhrzeit') || null, ort: f('ort') || null,
       titel: f('titel'), nummer: f('nummer') ? Number(f('nummer')) : null,
       notiz: f('notiz') || null, erstellt_von: ich.id,
-    })
+    }).select('id').single()
     if (error) return { fehler: error.message }
     revalidatePath('/verwaltung/sitzungen'); revalidatePath('/protokolle', 'layout'); revalidatePath('/portal')
-    return { ok: true, info: 'Sitzung angelegt.' }
+    return { ok: true, info: 'Sitzung angelegt.', id: (data as R).id }
   } catch (e) { return { fehler: (e as Error).message } }
 }
 
@@ -186,10 +186,19 @@ export async function sitzungLoeschenAction(id: string): Promise<AktionState> {
 }
 
 /** Nach dem Upload (Browser → Storage) das Dokument registrieren */
-export async function protokollRegistrierenAction(d: { sitzung_id: string; dateiname: string; storage_pfad: string; groesse: number; mime: string; typ: 'protokoll' | 'beilage'; freigegeben: boolean }): Promise<AktionState> {
+export async function protokollRegistrierenAction(d: { sitzung_id: string; dateiname: string; storage_pfad: string; groesse: number; mime: string; typ: 'protokoll' | 'beilage' | 'einladung'; freigegeben: boolean }): Promise<AktionState> {
   try {
     const ich = await uploadPflicht()
     const supabase = await createSupabaseServerClient()
+    if (d.typ === 'einladung') {
+      // nur eine offizielle Einladung je Sitzung: bisherige ersetzen; Einladung ist immer freigegeben
+      const { data: alt } = await supabase.from('protokolle').select('id, storage_pfad').eq('sitzung_id', d.sitzung_id).eq('typ', 'einladung')
+      for (const a of (alt ?? []) as R[]) {
+        await supabase.storage.from('protokolle').remove([a.storage_pfad])
+        await supabase.from('protokolle').delete().eq('id', a.id)
+      }
+      d.freigegeben = true
+    }
     const { error } = await supabase.from('protokolle').insert({ ...d, hochgeladen_von: ich.id })
     if (error) return { fehler: error.message }
     revalidatePath('/verwaltung/sitzungen'); revalidatePath('/protokolle', 'layout'); revalidatePath('/portal')
@@ -223,6 +232,16 @@ export async function protokollLoeschenAction(id: string): Promise<AktionState> 
 }
 
 // ── Sitzungseinladung mit Nachweis ──────────────────────────────────────────
+/** Offizielle Einladung (PDF) der Sitzung als Mailanhang laden – null, wenn keine hinterlegt ist */
+async function ladeEinladungsAnhang(sitzungId: string): Promise<{ filename: string; content: Buffer; contentType: string } | null> {
+  const admin = createSupabaseAdminClient()
+  const { data: doc } = await admin.from('protokolle').select('dateiname, storage_pfad').eq('sitzung_id', sitzungId).eq('typ', 'einladung').maybeSingle()
+  if (!doc) return null
+  const { data: blob, error } = await admin.storage.from('protokolle').download((doc as R).storage_pfad)
+  if (error || !blob) { console.error('Einladungs-PDF konnte nicht geladen werden', error); return null }
+  return { filename: (doc as R).dateiname, content: Buffer.from(await blob.arrayBuffer()), contentType: 'application/pdf' }
+}
+
 /**
  * Einladung versenden: RPC legt Einladungen für alle (noch nicht eingeladenen) Mitglieder des Gremiums an und
  * öffnet das Zugriffsfenster bis 24:00 des Sitzungstags. Danach je Mitglied eine persönliche Mail mit Token-Link.
@@ -247,14 +266,15 @@ export async function sitzungEinladenAction(id: string): Promise<AktionState> {
     const admin = createSupabaseAdminClient()
     const basis = process.env.NEXT_PUBLIC_APP_URL ?? ''
     const anzahlDokumente = ((s.protokolle ?? []) as R[]).filter(p => p.freigegeben).length
+    const anhang = await ladeEinladungsAnhang(id)
     let gesendet = 0, fehler = 0
     for (const e of liste) {
       const mail = baueEinladungsmail({
         anrede: `Guten Tag ${e.vorname} ${e.nachname},`.replace(/\s+,/, ','),
         gremium: s.gremien?.name ?? '', titel: s.titel, datum: s.datum, uhrzeit: s.uhrzeit, ort: s.ort,
-        anzahlDokumente, link: `${basis}/einladung/${e.token}`,
+        anzahlDokumente, link: `${basis}/einladung/${e.token}`, anhangName: anhang?.filename,
       })
-      const r = await sendeMailMitFehler(e.email, mail.betreff, mail.text, mail.html)
+      const r = await sendeMailMitFehler(e.email, mail.betreff, mail.text, mail.html, anhang ? [anhang] : [])
       await admin.from('sitzungs_einladungen').update(r.ok ? { gesendet_am: new Date().toISOString(), mail_fehler: null } : { mail_fehler: r.fehler ?? 'unbekannt' }).eq('id', e.einladung_id)
       await admin.from('zugriffs_log').insert({ user_id: e.user_id, sitzung_id: id, aktion: 'einladung' })
       if (r.ok) gesendet++; else fehler++
@@ -277,13 +297,14 @@ export async function einladungErneutSendenAction(einladungId: string): Promise<
       .eq('id', einladungId).maybeSingle()
     if (!e) return { fehler: 'Einladung nicht gefunden.' }
     if (e.sitzungen.status !== 'eingeladen' || new Date(e.sitzungen.zugriff_bis).getTime() <= Date.now()) return { fehler: 'Das Zugriffsfenster ist nicht (mehr) offen.' }
+    const anhang = await ladeEinladungsAnhang(e.sitzungen.id)
     const mail = baueEinladungsmail({
       anrede: `Guten Tag ${e.profiles.vorname} ${e.profiles.nachname},`,
       gremium: e.sitzungen.gremien?.name ?? '', titel: e.sitzungen.titel, datum: e.sitzungen.datum, uhrzeit: e.sitzungen.uhrzeit, ort: e.sitzungen.ort,
       anzahlDokumente: ((e.sitzungen.protokolle ?? []) as R[]).filter(p => p.freigegeben).length,
-      link: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/einladung/${e.token}`,
+      link: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/einladung/${e.token}`, anhangName: anhang?.filename,
     })
-    const r = await sendeMailMitFehler(e.profiles.email, mail.betreff, mail.text, mail.html)
+    const r = await sendeMailMitFehler(e.profiles.email, mail.betreff, mail.text, mail.html, anhang ? [anhang] : [])
     await admin.from('sitzungs_einladungen').update(r.ok ? { gesendet_am: new Date().toISOString(), mail_fehler: null } : { mail_fehler: r.fehler ?? 'unbekannt' }).eq('id', einladungId)
     await admin.from('zugriffs_log').insert({ user_id: e.user_id, sitzung_id: e.sitzungen.id, aktion: 'einladung' })
     revalidatePath('/verwaltung/sitzungen')

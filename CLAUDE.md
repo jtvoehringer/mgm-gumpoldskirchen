@@ -14,3 +14,6 @@
   Mitglieder sehen Sitzungen/Dokumente/Storage nur über `darf_sitzung_lesen()` (eingeladen und `zugriff_bis > now()`) –
   der Entzug um 24:00 passiert damit RLS-seitig ohne Cron; „abgelaufen" wird in der UI aus `zugriff_bis` abgeleitet (`lib/sitzung-status.ts`).
   Trigger `log_erste_ansicht` trägt `erste_ansicht_am` in der Einladung nach. Nachweis (eingeladen/bestätigt/geöffnet) in /verwaltung/sitzungen.
+- Dokumenttypen (Migration 003): `protokoll` | `beilage` | `einladung`. „einladung" = offizielle Einladung mit Tagesordnung (PDF, max. eine je Sitzung,
+  immer freigegeben, ersetzt beim Neu-Upload die alte) und wird beim Versand als Mailanhang mitgeschickt (`ladeEinladungsAnhang` in verwaltung/actions.ts).
+  Upload in /verwaltung/sitzungen: einzelne PDFs, ganzer Ordner (`webkitdirectory`, nur PDFs, Unterordner inklusive) oder Drag & Drop von Dateien/Ordnern auf die Sitzungskarte.

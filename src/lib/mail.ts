@@ -24,7 +24,9 @@ export async function sendeMail(an: string, betreff: string, text: string, html?
 }
 
 /** Wie sendeMail, liefert aber die Fehlermeldung (für den Nachweis in der Einladungstabelle) */
-export async function sendeMailMitFehler(an: string, betreff: string, text: string, html?: string): Promise<{ ok: boolean; fehler?: string }> {
+export type MailAnhang = { filename: string; content: Buffer; contentType?: string }
+
+export async function sendeMailMitFehler(an: string, betreff: string, text: string, html?: string, anhaenge: MailAnhang[] = []): Promise<{ ok: boolean; fehler?: string }> {
   const host = process.env.SMTP_HOST
   if (!host) return { ok: false, fehler: 'SMTP nicht konfiguriert' }
   try {
@@ -33,7 +35,7 @@ export async function sendeMailMitFehler(an: string, betreff: string, text: stri
       host, port, secure: port === 465,
       auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } : undefined,
     })
-    await transport.sendMail({ from: process.env.SMTP_FROM ?? process.env.SMTP_USER, to: an, subject: betreff, text, html })
+    await transport.sendMail({ from: process.env.SMTP_FROM ?? process.env.SMTP_USER, to: an, subject: betreff, text, html, attachments: anhaenge })
     return { ok: true }
   } catch (e) {
     console.error('Mailversand fehlgeschlagen', e)
