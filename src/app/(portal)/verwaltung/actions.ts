@@ -4,7 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
 import { getProfil, canAdmin, canUpload } from '@/lib/auth/roles'
-import { sendeMail } from '@/lib/mail'
+import { sendeMail, sendeMailMitFehler } from '@/lib/mail'
+import { baueEinladungsmail } from '@/lib/einladungsmail'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type R = Record<string, any>
@@ -160,7 +161,8 @@ export async function sitzungAnlegenAction(_p: AktionState, form: FormData): Pro
     if (!f('gremium_id') || !f('datum') || !f('titel')) return { fehler: 'Gremium, Datum und Titel sind Pflicht.' }
     const supabase = await createSupabaseServerClient()
     const { error } = await supabase.from('sitzungen').insert({
-      gremium_id: f('gremium_id'), datum: f('datum'), titel: f('titel'), nummer: f('nummer') ? Number(f('nummer')) : null,
+      gremium_id: f('gremium_id'), datum: f('datum'), uhrzeit: f('uhrzeit') || null, ort: f('ort') || null,
+      titel: f('titel'), nummer: f('nummer') ? Number(f('nummer')) : null,
       notiz: f('notiz') || null, erstellt_von: ich.id,
     })
     if (error) return { fehler: error.message }
@@ -217,5 +219,98 @@ export async function protokollLoeschenAction(id: string): Promise<AktionState> 
     if (error) return { fehler: error.message }
     revalidatePath('/verwaltung/sitzungen'); revalidatePath('/protokolle', 'layout'); revalidatePath('/portal')
     return { ok: true }
+  } catch (e) { return { fehler: (e as Error).message } }
+}
+
+// ── Sitzungseinladung mit Nachweis ──────────────────────────────────────────
+/**
+ * Einladung versenden: RPC legt Einladungen für alle (noch nicht eingeladenen) Mitglieder des Gremiums an und
+ * öffnet das Zugriffsfenster bis 24:00 des Sitzungstags. Danach je Mitglied eine persönliche Mail mit Token-Link.
+ * Mehrfach aufrufbar → nachträglich aufgenommene Mitglieder erhalten ihre Einladung.
+ */
+export async function sitzungEinladenAction(id: string): Promise<AktionState> {
+  try {
+    const ich = await uploadPflicht()
+    const supabase = await createSupabaseServerClient()
+    const { data: s } = await (supabase.from('sitzungen') as R)
+      .select('id, titel, datum, uhrzeit, ort, gremien(name), protokolle(freigegeben)').eq('id', id).maybeSingle()
+    if (!s) return { fehler: 'Sitzung nicht gefunden.' }
+
+    const { data: neue, error } = await supabase.rpc('sitzung_einladen', { p_sitzung_id: id })
+    if (error) return { fehler: error.message }
+    const liste = (neue ?? []) as R[]
+    if (liste.length === 0) {
+      revalidatePath('/verwaltung/sitzungen'); revalidatePath('/protokolle', 'layout'); revalidatePath('/portal')
+      return { ok: true, info: 'Keine neuen Mitglieder – alle aktiven Mitglieder des Gremiums wurden bereits eingeladen.' }
+    }
+
+    const admin = createSupabaseAdminClient()
+    const basis = process.env.NEXT_PUBLIC_APP_URL ?? ''
+    const anzahlDokumente = ((s.protokolle ?? []) as R[]).filter(p => p.freigegeben).length
+    let gesendet = 0, fehler = 0
+    for (const e of liste) {
+      const mail = baueEinladungsmail({
+        anrede: `Guten Tag ${e.vorname} ${e.nachname},`.replace(/\s+,/, ','),
+        gremium: s.gremien?.name ?? '', titel: s.titel, datum: s.datum, uhrzeit: s.uhrzeit, ort: s.ort,
+        anzahlDokumente, link: `${basis}/einladung/${e.token}`,
+      })
+      const r = await sendeMailMitFehler(e.email, mail.betreff, mail.text, mail.html)
+      await admin.from('sitzungs_einladungen').update(r.ok ? { gesendet_am: new Date().toISOString(), mail_fehler: null } : { mail_fehler: r.fehler ?? 'unbekannt' }).eq('id', e.einladung_id)
+      await admin.from('zugriffs_log').insert({ user_id: e.user_id, sitzung_id: id, aktion: 'einladung' })
+      if (r.ok) gesendet++; else fehler++
+    }
+    void ich
+    revalidatePath('/verwaltung/sitzungen'); revalidatePath('/protokolle', 'layout'); revalidatePath('/portal')
+    return fehler
+      ? { ok: true, info: `${gesendet} Einladung(en) versendet, ${fehler} fehlgeschlagen – Details in der Nachweisliste.` }
+      : { ok: true, info: `${gesendet} Einladung(en) versendet. Zugriff bis 24:00 Uhr am Sitzungstag.` }
+  } catch (e) { return { fehler: (e as Error).message } }
+}
+
+/** Einzelne Einladung erneut senden (z. B. nach Mailfehler oder auf Nachfrage) */
+export async function einladungErneutSendenAction(einladungId: string): Promise<AktionState> {
+  try {
+    await uploadPflicht()
+    const admin = createSupabaseAdminClient()
+    const { data: e } = await (admin.from('sitzungs_einladungen') as R)
+      .select('id, token, user_id, profiles(email, vorname, nachname), sitzungen(id, titel, datum, uhrzeit, ort, status, zugriff_bis, gremien(name), protokolle(freigegeben))')
+      .eq('id', einladungId).maybeSingle()
+    if (!e) return { fehler: 'Einladung nicht gefunden.' }
+    if (e.sitzungen.status !== 'eingeladen' || new Date(e.sitzungen.zugriff_bis).getTime() <= Date.now()) return { fehler: 'Das Zugriffsfenster ist nicht (mehr) offen.' }
+    const mail = baueEinladungsmail({
+      anrede: `Guten Tag ${e.profiles.vorname} ${e.profiles.nachname},`,
+      gremium: e.sitzungen.gremien?.name ?? '', titel: e.sitzungen.titel, datum: e.sitzungen.datum, uhrzeit: e.sitzungen.uhrzeit, ort: e.sitzungen.ort,
+      anzahlDokumente: ((e.sitzungen.protokolle ?? []) as R[]).filter(p => p.freigegeben).length,
+      link: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/einladung/${e.token}`,
+    })
+    const r = await sendeMailMitFehler(e.profiles.email, mail.betreff, mail.text, mail.html)
+    await admin.from('sitzungs_einladungen').update(r.ok ? { gesendet_am: new Date().toISOString(), mail_fehler: null } : { mail_fehler: r.fehler ?? 'unbekannt' }).eq('id', einladungId)
+    await admin.from('zugriffs_log').insert({ user_id: e.user_id, sitzung_id: e.sitzungen.id, aktion: 'einladung' })
+    revalidatePath('/verwaltung/sitzungen')
+    return r.ok ? { ok: true, info: `Einladung erneut an ${e.profiles.email} gesendet.` } : { fehler: `Versand fehlgeschlagen: ${r.fehler}` }
+  } catch (e) { return { fehler: (e as Error).message } }
+}
+
+/** Zugriff vorzeitig beenden (z. B. Sitzung abgesagt) */
+export async function sitzungZugriffBeendenAction(id: string): Promise<AktionState> {
+  try {
+    await uploadPflicht()
+    const supabase = await createSupabaseServerClient()
+    const { error } = await supabase.rpc('sitzung_zugriff_beenden', { p_sitzung_id: id })
+    if (error) return { fehler: error.message }
+    revalidatePath('/verwaltung/sitzungen'); revalidatePath('/protokolle', 'layout'); revalidatePath('/portal')
+    return { ok: true, info: 'Zugriff beendet – Mitglieder sehen die Unterlagen nicht mehr.' }
+  } catch (e) { return { fehler: (e as Error).message } }
+}
+
+/** Einladung zurückziehen (nur solange niemand bestätigt hat) → Sitzung wieder Entwurf */
+export async function sitzungZurueckziehenAction(id: string): Promise<AktionState> {
+  try {
+    await verwaltungPflicht()
+    const supabase = await createSupabaseServerClient()
+    const { error } = await supabase.rpc('sitzung_zurueckziehen', { p_sitzung_id: id })
+    if (error) return { fehler: error.message }
+    revalidatePath('/verwaltung/sitzungen'); revalidatePath('/protokolle', 'layout'); revalidatePath('/portal')
+    return { ok: true, info: 'Einladung zurückgezogen – Sitzung ist wieder ein Entwurf.' }
   } catch (e) { return { fehler: (e as Error).message } }
 }

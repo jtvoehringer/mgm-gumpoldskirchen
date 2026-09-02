@@ -34,6 +34,8 @@ export function StatusBadge({ status }: { status: string }) {
     deaktiviert: { l: 'entzogen',    c: 'bg-gk-err-bg text-gk-err-fg' },
     freigegeben: { l: 'freigegeben', c: 'bg-gk-ok-bg text-gk-ok-fg' },
     entwurf:     { l: 'entwurf',     c: 'bg-gk-blau-50 text-gk-blau' },
+    eingeladen:  { l: 'eingeladen',  c: 'bg-gk-ok-bg text-gk-ok-fg' },
+    abgelaufen:  { l: 'abgelaufen',  c: 'bg-gk-bg text-gk-text-2' },
   }
   const m = map[status] ?? { l: status, c: 'bg-gk-bg text-gk-text-2' }
   return <span className={`badge ${m.c}`}>{m.l}</span>

@@ -3,7 +3,7 @@ import LoginForm from './LoginForm'
 
 export const metadata: Metadata = { title: 'Anmelden' }
 
-export default async function LoginSeite({ searchParams }: { searchParams: Promise<{ weiter?: string; fehler?: string }> }) {
+export default async function LoginSeite({ searchParams }: { searchParams: Promise<{ weiter?: string; fehler?: string; email?: string }> }) {
   const sp = await searchParams
   return (
     <div className="max-w-md mx-auto">
@@ -14,7 +14,7 @@ export default async function LoginSeite({ searchParams }: { searchParams: Promi
       </p>
       {sp.fehler && <p className="mt-4 text-[13px] text-gk-err-fg bg-gk-err-bg rounded-lg px-3 py-2">{sp.fehler}</p>}
       <div className="card mt-6">
-        <LoginForm weiter={sp.weiter ?? '/portal'} />
+        <LoginForm weiter={sp.weiter ?? '/portal'} emailVorgabe={sp.email ?? ''} />
       </div>
     </div>
   )

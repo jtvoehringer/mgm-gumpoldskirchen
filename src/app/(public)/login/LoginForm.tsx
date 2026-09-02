@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation'
 import { KeyRound, Mail } from 'lucide-react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 
-export default function LoginForm({ weiter }: { weiter: string }) {
+export default function LoginForm({ weiter, emailVorgabe = '' }: { weiter: string; emailVorgabe?: string }) {
   const router = useRouter()
-  const [email, setEmail]   = useState('')
+  const [email, setEmail]   = useState(emailVorgabe)
   const [code, setCode]     = useState('')
   const [schritt, setSchritt] = useState<'email' | 'code'>('email')
   const [fehler, setFehler] = useState<string | null>(null)
