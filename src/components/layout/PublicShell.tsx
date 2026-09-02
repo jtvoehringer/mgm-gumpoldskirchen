@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import Logo from './Logo'
 
@@ -30,7 +31,9 @@ export default function PublicShell({ children, breit = false }: { children: Rea
           <span className="flex items-center gap-4">
             <Link href="/impressum" className="hover:text-gk-text">Impressum</Link>
             <Link href="/datenschutz" className="hover:text-gk-text">Datenschutz</Link>
-            <span className="font-mono text-[10.5px] text-gk-tertiary">powered by ICP Solutions</span>
+            <span className="flex items-center gap-2 font-mono text-[10.5px] text-gk-tertiary">
+              powered by <Image src="/logos/icp-lockup-inline-navy.svg" alt="ICP Solutions" width={2000} height={432} className="h-[16px] w-auto object-contain" />
+            </span>
           </span>
         </div>
       </footer>

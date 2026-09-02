@@ -1,4 +1,5 @@
 'use client'
+import Image from 'next/image'
 
 // ── App-Rahmen des Portals ───────────────────────────────────────────────────
 // Dunkelblaue Kopfleiste mit Negativ-Logo (lt. CD), grüner Balken, darunter die
@@ -33,8 +34,10 @@ export default function AppShell({ children, userName, userEmail, rolle, rolleLa
         <footer className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 pt-2">
           <div className="border-t border-gk-line pt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-[11.5px] text-gk-text-2">
             <span>Marktgemeinde Gumpoldskirchen · Sitzungsunterlagen für Gemeinderat und Gemeindevorstand</span>
-            <span className="font-mono text-[10.5px] text-gk-tertiary" title={buildSha ? `Build ${buildSha}` : undefined}>
-              powered by ICP Solutions · {APP_VERSION}{buildSha ? ` · ${buildSha.slice(0, 7)}` : ''}
+            <span className="flex items-center gap-2 font-mono text-[10.5px] text-gk-tertiary" title={buildSha ? `Build ${buildSha}` : undefined}>
+              <span>powered by</span>
+              <Image src="/logos/icp-lockup-inline-navy.svg" alt="ICP Solutions" width={2000} height={432} className="h-[16px] w-auto object-contain" />
+              <span>· {APP_VERSION}{buildSha ? ` · ${buildSha.slice(0, 7)}` : ''}</span>
             </span>
           </div>
         </footer>
