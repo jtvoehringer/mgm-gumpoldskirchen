@@ -119,7 +119,7 @@ export function erzeugeTabellenPdf(b: PdfBericht): Uint8Array {
   }
   add(`<< /Type /Pages /Kids [${pageIds.map(i => `${i} 0 R`).join(' ')}] /Count ${pageIds.length} >>`)
   const catalog = add(`<< /Type /Catalog /Pages ${pagesN} 0 R >>`)
-  const info = add(`<< /Title ${lit(b.titel)} /Producer (Sitzungsunterlagen Gumpoldskirchen) /CreationDate (D:${new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14)}Z) >>`)
+  const info = add(`<< /Title ${lit(b.titel)} /Producer (Sitzungsunterlagen Gumpoldskirchen) /CreationDate (D:${new Date().toISOString().split(/T|:|-/).join('').slice(0, 14)}Z) >>`)
 
   let out = '%PDF-1.4\n%\xE2\xE3\xCF\xD3\n'
   const offsets: number[] = []
