@@ -31,7 +31,7 @@ export default async function ProtokolleGremium({ params, searchParams }: {
 
       {!darf ? (
         <div className="card">
-          <Leer text={`Sie haben keinen Zugriff auf die Protokolle des Gremiums „${gremium.name}". Bei Bedarf kann die Gemeindeverwaltung den Zugang erweitern.`} />
+          <Leer text={`Sie haben keinen Zugriff auf die Sitzungsunterlagen des Gremiums „${gremium.name}". Bei Bedarf kann die Gemeindeverwaltung den Zugang erweitern.`} />
         </div>
       ) : (
         <>
@@ -61,7 +61,7 @@ export default async function ProtokolleGremium({ params, searchParams }: {
                       </td>
                       <td>
                         <div className="flex flex-wrap gap-1.5">
-                          {s.protokolle.length === 0 && <span className="text-[12.5px] text-gk-tertiary">Protokoll folgt</span>}
+                          {s.protokolle.length === 0 && <span className="text-[12.5px] text-gk-tertiary">Unterlagen folgen</span>}
                           {s.protokolle.map(p => <ProtokollLink key={p.id} protokoll={p} />)}
                         </div>
                       </td>

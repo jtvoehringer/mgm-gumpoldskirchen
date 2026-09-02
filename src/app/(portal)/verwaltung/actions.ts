@@ -109,6 +109,24 @@ export async function mitgliedAendernAction(_p: AktionState, form: FormData): Pr
       if (!['verwaltung', 'schriftfuehrung', 'mitglied'].includes(rolle)) return { fehler: 'Ungültige Rolle.' }
       if (id === ich.id && rolle !== 'verwaltung') return { fehler: 'Sie können Ihre eigene Rolle nicht herabstufen.' }
       await admin.from('profiles').update({ rolle }).eq('id', id)
+    } else if (was === 'bearbeiten') {
+      // Stammdaten ändern; E-Mail-Änderung auch im Auth-Konto (ohne Bestätigungsmail)
+      const f = (k: string) => String(form.get(k) ?? '').trim()
+      if (!f('vorname') || !f('nachname') || !f('email')) return { fehler: 'Vor- und Nachname sowie E-Mail sind Pflicht.' }
+      const email = f('email').toLowerCase()
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { fehler: 'Bitte eine gültige E-Mail-Adresse angeben.' }
+      const { data: alt } = await admin.from('profiles').select('email').eq('id', id).maybeSingle()
+      if (!alt) return { fehler: 'Benutzer nicht gefunden.' }
+      if ((alt as R).email !== email) {
+        const { data: dup } = await admin.from('profiles').select('id').eq('email', email).neq('id', id).maybeSingle()
+        if (dup) return { fehler: 'Diese E-Mail-Adresse wird bereits von einem anderen Benutzer verwendet.' }
+        const { error: ae } = await admin.auth.admin.updateUserById(id, { email, email_confirm: true })
+        if (ae) return { fehler: `E-Mail konnte nicht geändert werden: ${ae.message}` }
+      }
+      const { error: pe } = await admin.from('profiles').update({ vorname: f('vorname'), nachname: f('nachname'), email, funktion: f('funktion') || null, fraktion: f('fraktion') || null }).eq('id', id)
+      if (pe) return { fehler: pe.message }
+      revalidatePath('/verwaltung/mitglieder')
+      return { ok: true, info: 'Benutzerdaten gespeichert.' }
     } else if (was === 'einladung') {
       const { data: p } = await admin.from('profiles').select('email').eq('id', id).maybeSingle()
       if (!p) return { fehler: 'Benutzer nicht gefunden.' }

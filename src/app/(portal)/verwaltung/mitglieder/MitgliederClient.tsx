@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useState, useTransition } from 'react'
-import { UserPlus, Ban, RotateCcw, Send } from 'lucide-react'
+import { UserPlus, Ban, RotateCcw, Send, Pencil, Check, X } from 'lucide-react'
 import { mitgliedAnlegenAction, mitgliedAendernAction, type AktionState } from '../actions'
 import { ROLLEN_LABEL, type Rolle } from '@/lib/auth/rollen'
 import { StatusBadge, Leer } from '@/components/ui'
@@ -16,9 +16,10 @@ export default function MitgliederClient({ mitglieder, gremien, ichId }: { mitgl
   const [filter, setFilter] = useState('')
   const [neuState, neuAction, neuPending] = useActionState<AktionState, FormData>(mitgliedAnlegenAction, {})
   const [meldung, setMeldung] = useState<AktionState>({})
+  const [bearbeite, setBearbeite] = useState<string | null>(null)
   const [pending, start] = useTransition()
 
-  const aendern = (fd: FormData) => start(async () => setMeldung(await mitgliedAendernAction({}, fd)))
+  const aendern = (fd: FormData) => start(async () => { const r = await mitgliedAendernAction({}, fd); setMeldung(r); if (r.ok && fd.get('was') === 'bearbeiten') setBearbeite(null) })
   const f = filter.toLowerCase()
   const liste = mitglieder.filter(m => !f || `${m.vorname} ${m.nachname} ${m.email} ${m.funktion ?? ''} ${m.fraktion ?? ''}`.toLowerCase().includes(f))
 
@@ -66,7 +67,24 @@ export default function MitgliederClient({ mitglieder, gremien, ichId }: { mitgl
           <table className="liste">
             <thead><tr><th>Name</th><th>Rolle</th><th>Zugriff auf</th><th>Status</th><th>Letzter Login</th><th></th></tr></thead>
             <tbody>
-              {liste.map(m => (
+              {liste.map(m => bearbeite === m.id ? (
+                <tr key={m.id} className="bg-gk-gruen-bg/60">
+                  <td colSpan={6}>
+                    <form className="grid sm:grid-cols-6 gap-2 items-end py-1" onSubmit={e => { e.preventDefault(); const fd = new FormData(e.currentTarget); fd.set('id', m.id); fd.set('was', 'bearbeiten'); aendern(fd) }}>
+                      <div><label className="form-label">Vorname *</label><input name="vorname" defaultValue={m.vorname} required className="input !py-1.5" /></div>
+                      <div><label className="form-label">Nachname *</label><input name="nachname" defaultValue={m.nachname} required className="input !py-1.5" /></div>
+                      <div className="sm:col-span-2"><label className="form-label">E-Mail *</label><input name="email" type="email" defaultValue={m.email} required className="input !py-1.5" /></div>
+                      <div><label className="form-label">Funktion</label><input name="funktion" defaultValue={m.funktion ?? ''} className="input !py-1.5" /></div>
+                      <div><label className="form-label">Fraktion</label><input name="fraktion" defaultValue={m.fraktion ?? ''} className="input !py-1.5" /></div>
+                      <div className="sm:col-span-6 flex justify-end gap-2">
+                        <span className="mr-auto self-center text-[12px] text-gk-text-2">Bei geänderter E-Mail-Adresse meldet sich die Person künftig mit der neuen Adresse an.</span>
+                        <button type="button" onClick={() => setBearbeite(null)} className="btn-secondary !py-1.5"><X size={14} /> Abbrechen</button>
+                        <button type="submit" disabled={pending} className="btn-primary !py-1.5"><Check size={14} /> Speichern</button>
+                      </div>
+                    </form>
+                  </td>
+                </tr>
+              ) : (
                 <tr key={m.id} className={m.aktiv ? '' : 'opacity-60'}>
                   <td><p className="font-semibold">{m.vorname} {m.nachname}{m.id === ichId && <span className="ml-1.5 font-mono text-[10px] text-gk-tertiary">(Sie)</span>}</p>
                     <p className="text-[12.5px] text-gk-text-2">{[m.funktion, m.fraktion].filter(Boolean).join(' · ')}{m.funktion || m.fraktion ? ' · ' : ''}{m.email}</p></td>
@@ -95,6 +113,7 @@ export default function MitgliederClient({ mitglieder, gremien, ichId }: { mitgl
                   <td><StatusBadge status={m.aktiv ? 'aktiv' : 'deaktiviert'} /></td>
                   <td className="font-mono text-[12px] text-gk-text-2 whitespace-nowrap">{m.letzter_login ? datum(m.letzter_login) : '–'}</td>
                   <td className="whitespace-nowrap text-right">
+                    <button disabled={pending} title="Bearbeiten" className="p-1.5 rounded-md hover:bg-gk-bg text-gk-text-2" onClick={() => { setMeldung({}); setBearbeite(m.id) }}><Pencil size={15} /></button>
                     <button disabled={pending} title="Anmelde-Link erneut senden" className="p-1.5 rounded-md hover:bg-gk-bg text-gk-text-2"
                       onClick={() => { const fd = new FormData(); fd.set('id', m.id); fd.set('was', 'einladung'); aendern(fd) }}><Send size={15} /></button>
                     {m.aktiv ? (

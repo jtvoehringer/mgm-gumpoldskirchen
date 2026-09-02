@@ -7,8 +7,8 @@ export type NavGroup = { key: string; label: string; items: NavItem[] }
 export function buildNav(rolle: Rolle): NavGroup[] {
   const groups: NavGroup[] = [
     { key: 'portal', label: 'Übersicht', items: [{ label: 'Übersicht', href: '/portal' }] },
-    { key: 'protokolle', label: 'Protokolle', items: [
-      { label: 'Alle Protokolle', href: '/protokolle' },
+    { key: 'protokolle', label: 'Sitzungsunterlagen', items: [
+      { label: 'Alle Unterlagen', href: '/protokolle' },
       { label: 'Gemeinderat', href: '/protokolle/gemeinderat' },
       { label: 'Gemeindevorstand', href: '/protokolle/gemeindevorstand' },
     ] },

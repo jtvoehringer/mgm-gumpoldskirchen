@@ -41,8 +41,8 @@ export default function Startseite() {
 
       <section className="mt-12 grid sm:grid-cols-3 gap-4">
         {[
-          ['Gemeinderat', 'Protokolle der Gemeinderatssitzungen'],
-          ['Gemeindevorstand', 'Protokolle der Vorstandssitzungen – eigener Berechtigungsbereich'],
+          ['Gemeinderat', 'Unterlagen der Gemeinderatssitzungen'],
+          ['Gemeindevorstand', 'Unterlagen der Vorstandssitzungen – eigener Berechtigungsbereich'],
           ['Verwaltung', 'Freigabe, Mitgliederverwaltung und Upload durch die Gemeindeverwaltung'],
         ].map(([t, d]) => (
           <div key={t} className="rounded-xl border border-gk-line bg-white p-5 border-t-4 border-t-gk-gruen">

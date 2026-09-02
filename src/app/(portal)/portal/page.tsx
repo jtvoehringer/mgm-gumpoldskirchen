@@ -32,7 +32,7 @@ export default async function Uebersicht() {
     <div>
       <PageHeader eyebrow={datumLang(heute)} titel={`${gruss}, ${profil.vorname || profil.nachname}`}
         beschreibung={profil.rolle === 'mitglied'
-          ? `Sie haben Zugriff auf die Protokolle: ${gremien.filter(g => profil.gremien.includes(g.schluessel)).map(g => g.name).join(', ') || '–'}`
+          ? `Sie haben Zugriff auf die Sitzungsunterlagen: ${gremien.filter(g => profil.gremien.includes(g.schluessel)).map(g => g.name).join(', ') || '–'}`
           : 'Übersicht über Sitzungen, Unterlagen und Mitglieder.'} />
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -47,10 +47,10 @@ export default async function Uebersicht() {
       <div className="grid lg:grid-cols-[1.4fr_1fr] gap-6 mt-6">
         <section className="card">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display uppercase tracking-[.03em] text-[19px]">Neueste Protokolle</h2>
+            <h2 className="font-display uppercase tracking-[.03em] text-[19px]">Aktuelle Sitzungsunterlagen</h2>
             <Link href="/protokolle" className="text-[13px] text-gk-blau font-medium hover:underline">Alle anzeigen</Link>
           </div>
-          {sitzungen.length === 0 ? <Leer text="Noch keine Protokolle verfügbar." /> : (
+          {sitzungen.length === 0 ? <Leer text={profil.rolle === 'mitglied' ? 'Derzeit sind keine Unterlagen freigeschaltet. Sie erhalten vor jeder Sitzung eine Einladung per E-Mail.' : 'Noch keine Sitzungen vorhanden.'} /> : (
             <ul className="divide-y divide-gk-line">
               {sitzungen.map(s => (
                 <li key={s.id} className="py-3 flex items-start gap-3">
@@ -60,7 +60,7 @@ export default async function Uebersicht() {
                     <p className="text-[12.5px] text-gk-text-2"><span className="font-mono">{datum(s.datum)}</span> · {s.gremium.name}</p>
                     <div className="mt-1.5 flex flex-wrap gap-1.5">
                       {s.protokolle.map(p => <ProtokollLink key={p.id} protokoll={p} klein />)}
-                      {s.protokolle.length === 0 && <span className="text-[12px] text-gk-tertiary">Protokoll folgt</span>}
+                      {s.protokolle.length === 0 && <span className="text-[12px] text-gk-tertiary">Unterlagen folgen</span>}
                     </div>
                   </div>
                 </li>
@@ -89,7 +89,7 @@ export default async function Uebersicht() {
             <div className="absolute inset-x-0 bottom-0 h-1.5 bg-gk-gruen" />
             <p className="eyebrow !text-white/60">Hinweis</p>
             <p className="mt-2 text-[13.5px] leading-relaxed text-white/90">
-              Die Protokolle sind ausschließlich für Mitglieder des jeweiligen Gremiums bestimmt. Bitte geben Sie Dokumente nicht weiter.
+              Die Sitzungsunterlagen sind ausschließlich für Mitglieder des jeweiligen Gremiums bestimmt. Bitte geben Sie Dokumente nicht weiter.
               Jeder Aufruf wird protokolliert.
             </p>
           </section>
