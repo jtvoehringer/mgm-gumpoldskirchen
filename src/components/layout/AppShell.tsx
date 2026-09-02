@@ -8,7 +8,7 @@ import Image from 'next/image'
 import { useMemo } from 'react'
 import Topbar from './Topbar'
 import TabNav from './TabNav'
-import { buildNav } from '@/lib/navigation'
+import { buildNav, type NavGremium } from '@/lib/navigation'
 import type { Rolle } from '@/lib/auth/rollen'
 
 interface Props {
@@ -17,12 +17,13 @@ interface Props {
   userEmail: string
   rolle: Rolle
   rolleLabel: string
+  gremien: NavGremium[]
 }
 
 export const APP_VERSION = 'v0.1.0 · September 2026'
 
-export default function AppShell({ children, userName, userEmail, rolle, rolleLabel }: Props) {
-  const groups = useMemo(() => buildNav(rolle), [rolle])
+export default function AppShell({ children, userName, userEmail, rolle, rolleLabel, gremien }: Props) {
+  const groups = useMemo(() => buildNav(rolle, gremien), [rolle, gremien])
   const buildSha = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA
 
   return (

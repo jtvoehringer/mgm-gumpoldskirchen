@@ -32,6 +32,7 @@ export function StatusBadge({ status }: { status: string }) {
     abgelehnt:   { l: 'abgelehnt',   c: 'bg-gk-err-bg text-gk-err-fg' },
     aktiv:       { l: 'aktiv',       c: 'bg-gk-ok-bg text-gk-ok-fg' },
     deaktiviert: { l: 'entzogen',    c: 'bg-gk-err-bg text-gk-err-fg' },
+    inaktiv:     { l: 'inaktiv',     c: 'bg-gk-bg text-gk-text-2' },
     freigegeben: { l: 'freigegeben', c: 'bg-gk-ok-bg text-gk-ok-fg' },
     entwurf:     { l: 'entwurf',     c: 'bg-gk-blau-50 text-gk-blau' },
     eingeladen:  { l: 'eingeladen',  c: 'bg-gk-ok-bg text-gk-ok-fg' },

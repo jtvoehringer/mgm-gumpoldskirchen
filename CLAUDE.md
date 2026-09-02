@@ -17,3 +17,6 @@
 - Dokumenttypen (Migration 003): `protokoll` | `beilage` | `einladung`. „einladung" = offizielle Einladung mit Tagesordnung (PDF, max. eine je Sitzung,
   immer freigegeben, ersetzt beim Neu-Upload die alte) und wird beim Versand als Mailanhang mitgeschickt (`ladeEinladungsAnhang` in verwaltung/actions.ts).
   Upload in /verwaltung/sitzungen: einzelne PDFs, ganzer Ordner (`webkitdirectory`, nur PDFs, Unterordner inklusive) oder Drag & Drop von Dateien/Ordnern auf die Sitzungskarte.
+- Gremien (Migration 004) sind Daten, kein Code: Tabelle `gremien` mit `aktiv`; Pflege unter /verwaltung/gremien (anlegen, umbenennen, Reihenfolge, deaktivieren;
+  löschen nur ohne Sitzungen/Mitglieder). Navigation, Filter, Chips und Auswahlfelder werden aus `ladeGremien()` gebaut (Mitglieder: nur eigene Gremien).
+  Reihung lt. Jörgen: Gemeindevorstand (1), Gemeinderat (2), Ausschüsse alphabetisch (ab 10). Keine Gremien-Schlüssel im Code fest verdrahten.

@@ -322,3 +322,66 @@ export async function sitzungZurueckziehenAction(id: string): Promise<AktionStat
     return { ok: true, info: 'Einladung zurückgezogen – Sitzung ist wieder ein Entwurf.' }
   } catch (e) { return { fehler: (e as Error).message } }
 }
+
+// ── Gremien ─────────────────────────────────────────────────────────────────
+function schluesselAus(name: string) {
+  return name.toLowerCase().replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+    .normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40)
+}
+
+export async function gremiumAnlegenAction(form: FormData): Promise<AktionState> {
+  try {
+    await verwaltungPflicht()
+    const f = (k: string) => String(form.get(k) ?? '').trim()
+    if (!f('name') || !f('kurz')) return { fehler: 'Name und Kürzel sind Pflicht.' }
+    const schluessel = schluesselAus(f('name'))
+    if (!schluessel) return { fehler: 'Aus dem Namen lässt sich kein Schlüssel bilden.' }
+    const supabase = await createSupabaseServerClient()
+    const { data: max } = await supabase.from('gremien').select('sortierung').order('sortierung', { ascending: false }).limit(1).maybeSingle()
+    const sortierung = f('sortierung') ? Number(f('sortierung')) : ((max as R | null)?.sortierung ?? 0) + 1
+    const { error } = await supabase.from('gremien').insert({ schluessel, name: f('name'), kurz: f('kurz'), sortierung, aktiv: true })
+    if (error) return { fehler: /duplicate|unique/i.test(error.message) ? 'Ein Gremium mit diesem Namen/Schlüssel gibt es bereits.' : error.message }
+    revalidatePath('/', 'layout')
+    return { ok: true, info: `Gremium „${f('name')}" angelegt.` }
+  } catch (e) { return { fehler: (e as Error).message } }
+}
+
+export async function gremiumSpeichernAction(form: FormData): Promise<AktionState> {
+  try {
+    await verwaltungPflicht()
+    const f = (k: string) => String(form.get(k) ?? '').trim()
+    if (!f('id') || !f('name') || !f('kurz')) return { fehler: 'Name und Kürzel sind Pflicht.' }
+    const supabase = await createSupabaseServerClient()
+    const { error } = await supabase.from('gremien').update({ name: f('name'), kurz: f('kurz'), sortierung: f('sortierung') ? Number(f('sortierung')) : 0 }).eq('id', f('id'))
+    if (error) return { fehler: error.message }
+    revalidatePath('/', 'layout')
+    return { ok: true, info: 'Gremium gespeichert.' }
+  } catch (e) { return { fehler: (e as Error).message } }
+}
+
+export async function gremiumAktivAction(id: string, aktiv: boolean): Promise<AktionState> {
+  try {
+    await verwaltungPflicht()
+    const supabase = await createSupabaseServerClient()
+    const { error } = await supabase.from('gremien').update({ aktiv }).eq('id', id)
+    if (error) return { fehler: error.message }
+    revalidatePath('/', 'layout')
+    return { ok: true, info: aktiv ? 'Gremium aktiviert.' : 'Gremium deaktiviert – bestehende Sitzungen und Zuordnungen bleiben erhalten.' }
+  } catch (e) { return { fehler: (e as Error).message } }
+}
+
+export async function gremiumLoeschenAction(id: string): Promise<AktionState> {
+  try {
+    await verwaltungPflicht()
+    const supabase = await createSupabaseServerClient()
+    const [{ count: s }, { count: m }] = await Promise.all([
+      supabase.from('sitzungen').select('id', { count: 'exact', head: true }).eq('gremium_id', id),
+      supabase.from('mitglied_gremien').select('user_id', { count: 'exact', head: true }).eq('gremium_id', id),
+    ])
+    if ((s ?? 0) > 0 || (m ?? 0) > 0) return { fehler: 'Gremium hat noch Sitzungen oder Mitglieder – bitte stattdessen deaktivieren.' }
+    const { error } = await supabase.from('gremien').delete().eq('id', id)
+    if (error) return { fehler: error.message }
+    revalidatePath('/', 'layout')
+    return { ok: true, info: 'Gremium gelöscht.' }
+  } catch (e) { return { fehler: (e as Error).message } }
+}

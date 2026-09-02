@@ -5,7 +5,7 @@ export { sitzungStatus, type SitzungStatus } from './sitzung-status'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type R = Record<string, any>
 
-export type Gremium = { id: string; schluessel: string; name: string; kurz: string; sortierung: number }
+export type Gremium = { id: string; schluessel: string; name: string; kurz: string; sortierung: number; aktiv: boolean }
 export type Protokoll = { id: string; dateiname: string; groesse: number | null; typ: string; freigegeben: boolean; hochgeladen_am: string }
 export type Einladung = { id: string; user_id: string; gesendet_am: string | null; mail_fehler: string | null; bestaetigt_am: string | null; erste_ansicht_am: string | null; profil: { vorname: string; nachname: string; email: string } | null }
 export type Sitzung = {
@@ -17,9 +17,12 @@ export type Sitzung = {
 
 const TYP_RANG: Record<string, number> = { einladung: 0, protokoll: 1, beilage: 2 }
 
-export async function ladeGremien(): Promise<Gremium[]> {
+/** Gremien – standardmäßig nur aktive (für Auswahl/Navigation); `alle: true` liefert auch deaktivierte (Verwaltung, Altbestand) */
+export async function ladeGremien(opts: { alle?: boolean } = {}): Promise<Gremium[]> {
   const supabase = await createSupabaseServerClient()
-  const { data } = await supabase.from('gremien').select('*').order('sortierung')
+  let q = supabase.from('gremien').select('*').order('sortierung').order('name')
+  if (!opts.alle) q = q.eq('aktiv', true)
+  const { data } = await q
   return (data ?? []) as Gremium[]
 }
 
