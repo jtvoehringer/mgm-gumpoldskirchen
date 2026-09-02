@@ -37,7 +37,7 @@ export default async function Uebersicht() {
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {proGremium.map(x => (
-          <Kpi key={x.g.id} label={x.g.name} wert={x.protokolle} hinweis={`${x.sitzungen} Sitzungen`} href={`/protokolle/${x.g.schluessel}`} />
+          <Kpi key={x.g.id} label={x.g.name} wert={x.sitzungen} hinweis={`${x.sitzungen === 1 ? 'Sitzung' : 'Sitzungen'} · ${x.protokolle} ${x.protokolle === 1 ? 'Dokument' : 'Dokumente'}`} href={`/protokolle/${x.g.schluessel}`} />
         ))}
         {profil.rolle === 'verwaltung' && <>
           <Kpi label="Aktive Mitglieder" wert={mitglieder} hinweis="mit Lesezugriff" href="/verwaltung/mitglieder" />
