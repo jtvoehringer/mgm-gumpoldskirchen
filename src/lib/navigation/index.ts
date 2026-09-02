@@ -16,7 +16,6 @@ export function buildNav(rolle: Rolle): NavGroup[] {
   if (rolle === 'verwaltung' || rolle === 'schriftfuehrung') {
     const items: NavItem[] = [{ label: 'Sitzungen & Upload', href: '/verwaltung/sitzungen' }]
     if (rolle === 'verwaltung') {
-      items.unshift({ label: 'Zugangsanträge', href: '/verwaltung/antraege' })
       items.push({ label: 'Mitglieder', href: '/verwaltung/mitglieder' })
       items.push({ label: 'Zugriffsprotokoll', href: '/verwaltung/zugriffe' })
     }

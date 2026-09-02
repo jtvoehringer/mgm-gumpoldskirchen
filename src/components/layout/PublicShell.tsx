@@ -2,7 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import Logo from './Logo'
 
-/** Rahmen der öffentlichen Seiten (Start, Antrag, Login): dunkelblaue Kopfleiste mit grünem Balken */
+/** Rahmen der öffentlichen Seiten (Start, Login, Einladung): dunkelblaue Kopfleiste mit grünem Balken */
 export default function PublicShell({ children, breit = false }: { children: React.ReactNode; breit?: boolean }) {
   return (
     <div className="min-h-screen flex flex-col bg-gk-bg">
@@ -16,7 +16,6 @@ export default function PublicShell({ children, breit = false }: { children: Rea
             </span>
           </Link>
           <nav className="flex items-center gap-2 text-[13.5px]">
-            <Link href="/antrag" className="px-3 py-1.5 rounded-md hover:bg-white/10">Zugang beantragen</Link>
             <Link href="/login" className="px-3 py-1.5 rounded-md bg-white text-gk-blau font-semibold hover:bg-gk-blau-50">Anmelden</Link>
           </nav>
         </div>

@@ -75,37 +75,6 @@ async function benutzerFreigeben(d: { email: string; vorname: string; nachname: 
   return userId!
 }
 
-// ── Zugangsanträge ──────────────────────────────────────────────────────────
-export async function antragEntscheidenAction(_p: AktionState, form: FormData): Promise<AktionState> {
-  try {
-    const ich = await verwaltungPflicht()
-    const id = String(form.get('id'))
-    const entscheidung = String(form.get('entscheidung'))
-    const begruendung = String(form.get('begruendung') ?? '').trim() || null
-    const gremien = form.getAll('gremien').map(String)
-
-    const supabase = await createSupabaseServerClient()
-    const { data: a } = await supabase.from('zugangsantraege').select('*').eq('id', id).maybeSingle()
-    if (!a) return { fehler: 'Antrag nicht gefunden.' }
-    if ((a as R).status !== 'offen') return { fehler: 'Antrag wurde bereits entschieden.' }
-
-    if (entscheidung === 'genehmigen') {
-      if (gremien.length === 0) return { fehler: 'Bitte mindestens ein Gremium freigeben.' }
-      const userId = await benutzerFreigeben({
-        email: (a as R).email, vorname: (a as R).vorname, nachname: (a as R).nachname,
-        funktion: (a as R).funktion, fraktion: (a as R).fraktion, gremien,
-      })
-      await supabase.from('zugangsantraege').update({ status: 'genehmigt', begruendung, entschieden_am: new Date().toISOString(), entschieden_von: ich.id, user_id: userId }).eq('id', id)
-    } else {
-      await supabase.from('zugangsantraege').update({ status: 'abgelehnt', begruendung, entschieden_am: new Date().toISOString(), entschieden_von: ich.id }).eq('id', id)
-      await sendeMail((a as R).email, 'Ihr Antrag auf Zugang zu den Sitzungsunterlagen',
-        `Sehr geehrte/r ${(a as R).vorname} ${(a as R).nachname},\n\nIhr Antrag auf Zugang zu den Sitzungsunterlagen konnte nicht freigegeben werden.${begruendung ? `\n\nBegründung: ${begruendung}` : ''}\n\nBei Fragen wenden Sie sich bitte an die Gemeindeverwaltung.\n\nMarktgemeinde Gumpoldskirchen`)
-    }
-    revalidatePath('/verwaltung/antraege'); revalidatePath('/verwaltung/mitglieder'); revalidatePath('/portal')
-    return { ok: true, info: entscheidung === 'genehmigen' ? 'Zugang freigegeben – Einladung wurde versendet.' : 'Antrag abgelehnt.' }
-  } catch (e) { return { fehler: (e as Error).message } }
-}
-
 // ── Mitglieder ──────────────────────────────────────────────────────────────
 export async function mitgliedAnlegenAction(_p: AktionState, form: FormData): Promise<AktionState> {
   try {

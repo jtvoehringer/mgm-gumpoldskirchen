@@ -31,7 +31,7 @@ export default function MitgliederClient({ mitglieder, gremien, ichId }: { mitgl
 
       {neuOffen && (
         <form action={neuAction} className="card border-l-4 border-l-gk-gruen space-y-4">
-          <p className="text-[14px] font-semibold">Benutzer direkt anlegen (ohne Antrag) – die Einladung wird per E-Mail versendet.</p>
+          <p className="text-[14px] font-semibold">Benutzer anlegen – die Zugangs-Einladung wird per E-Mail versendet.</p>
           <div className="grid sm:grid-cols-3 gap-3">
             <div><label className="form-label">Vorname *</label><input name="vorname" required className="input" /></div>
             <div><label className="form-label">Nachname *</label><input name="nachname" required className="input" /></div>

@@ -24,7 +24,7 @@ export default function LoginForm({ weiter, emailVorgabe = '' }: { weiter: strin
     if (error) {
       const m = error.message
       setFehler(/signups not allowed|not found/i.test(m)
-        ? 'Für diese E-Mail-Adresse ist kein freigegebener Zugang vorhanden. Bitte zuerst Zugang beantragen.'
+        ? 'Für diese E-Mail-Adresse ist kein freigegebener Zugang vorhanden. Bitte wenden Sie sich an die Gemeindeverwaltung.'
         : /rate limit/i.test(m)
         ? 'Derzeit können keine weiteren Anmelde-Mails versendet werden. Bitte in einigen Minuten erneut versuchen oder den Code aus der letzten E-Mail verwenden.'
         : /security purposes|after \d+ seconds/i.test(m)
@@ -68,7 +68,7 @@ export default function LoginForm({ weiter, emailVorgabe = '' }: { weiter: strin
       {fehler && <p className="text-[13px] text-gk-err-fg bg-gk-err-bg rounded-lg px-3 py-2">{fehler}</p>}
       <button type="submit" disabled={laden} className="btn-primary w-full"><Mail size={15} /> {laden ? 'Sende Code …' : 'Code per E-Mail senden'}</button>
       <button type="button" onClick={() => { if (email.trim()) setSchritt('code') }} className="w-full text-[13px] text-gk-blau hover:underline">Ich habe bereits einen Code erhalten</button>
-      <p className="text-[12.5px] text-gk-text-2 text-center">Noch kein Zugang? <a href="/antrag" className="text-gk-blau underline underline-offset-2">Zugang beantragen</a></p>
+      <p className="text-[12.5px] text-gk-text-2 text-center">Noch kein Zugang? Die Gemeindeverwaltung legt Ihren Zugang an und lädt Sie per E-Mail ein.</p>
     </form>
   )
 }

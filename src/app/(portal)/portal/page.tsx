@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { FileText, Inbox, Users, Upload } from 'lucide-react'
+import { FileText, Users, Upload } from 'lucide-react'
 import { getProfil } from '@/lib/auth/roles'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ladeSitzungen, ladeGremien } from '@/lib/protokolle'
@@ -19,13 +19,10 @@ export default async function Uebersicht() {
     protokolle: alle.filter(s => s.gremium.id === g.id).reduce((n, s) => n + s.protokolle.filter(p => p.freigegeben).length, 0),
   })).filter(x => profil.rolle !== 'mitglied' || profil.gremien.includes(x.g.schluessel))
 
-  let offen = 0, mitglieder = 0
+  let mitglieder = 0
   if (profil.rolle === 'verwaltung') {
-    const [{ count: a }, { count: m }] = await Promise.all([
-      supabase.from('zugangsantraege').select('id', { count: 'exact', head: true }).eq('status', 'offen'),
-      supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('aktiv', true).eq('rolle', 'mitglied'),
-    ])
-    offen = a ?? 0; mitglieder = m ?? 0
+    const { count: m } = await supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('aktiv', true).eq('rolle', 'mitglied')
+    mitglieder = m ?? 0
   }
 
   const heute = new Date()
@@ -36,14 +33,13 @@ export default async function Uebersicht() {
       <PageHeader eyebrow={datumLang(heute)} titel={`${gruss}, ${profil.vorname || profil.nachname}`}
         beschreibung={profil.rolle === 'mitglied'
           ? `Sie haben Zugriff auf die Protokolle: ${gremien.filter(g => profil.gremien.includes(g.schluessel)).map(g => g.name).join(', ') || '–'}`
-          : 'Übersicht über Protokolle, Anträge und Mitglieder.'} />
+          : 'Übersicht über Sitzungen, Unterlagen und Mitglieder.'} />
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {proGremium.map(x => (
           <Kpi key={x.g.id} label={x.g.name} wert={x.protokolle} hinweis={`${x.sitzungen} Sitzungen`} href={`/protokolle/${x.g.schluessel}`} />
         ))}
         {profil.rolle === 'verwaltung' && <>
-          <Kpi label="Offene Anträge" wert={offen} hinweis={offen ? 'warten auf Freigabe' : 'nichts zu tun'} href="/verwaltung/antraege" />
           <Kpi label="Aktive Mitglieder" wert={mitglieder} hinweis="mit Lesezugriff" href="/verwaltung/mitglieder" />
         </>}
       </div>
@@ -78,8 +74,7 @@ export default async function Uebersicht() {
             <section className="card">
               <h2 className="font-display uppercase tracking-[.03em] text-[19px] mb-3">Verwaltung</h2>
               <ul className="space-y-1.5 text-[13.5px]">
-                <li><Link href="/verwaltung/antraege" className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-gk-bg"><Inbox size={15} className="text-gk-blau" /> Zugangsanträge prüfen {offen > 0 && <span className="badge bg-gk-warn-bg text-gk-warn-fg ml-auto">{offen} offen</span>}</Link></li>
-                <li><Link href="/verwaltung/sitzungen" className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-gk-bg"><Upload size={15} className="text-gk-blau" /> Protokoll hochladen</Link></li>
+                <li><Link href="/verwaltung/sitzungen" className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-gk-bg"><Upload size={15} className="text-gk-blau" /> Sitzung anlegen & Unterlagen hochladen</Link></li>
                 <li><Link href="/verwaltung/mitglieder" className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-gk-bg"><Users size={15} className="text-gk-blau" /> Mitglieder verwalten</Link></li>
               </ul>
             </section>

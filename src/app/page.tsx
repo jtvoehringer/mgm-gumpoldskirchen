@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { FileText, ShieldCheck, MailCheck, UserCheck } from 'lucide-react'
+import { FileText, ShieldCheck, MailCheck, UserCheck, Clock } from 'lucide-react'
 import PublicShell from '@/components/layout/PublicShell'
 
 export default function Startseite() {
@@ -10,12 +10,11 @@ export default function Startseite() {
           <p className="eyebrow mb-3">Marktgemeinde Gumpoldskirchen</p>
           <h1 className="headline text-[40px] sm:text-[52px]">Sitzungsunterlagen<br />digital & sicher</h1>
           <p className="mt-5 text-[16px] text-gk-text-1 leading-relaxed max-w-xl">
-            Mitglieder des Gemeinderats und des Gemeindevorstands erhalten hier Zugang zu den Protokollen ihrer Sitzungen –
-            gegliedert nach Gremium und Jahr, jederzeit im Browser abrufbar.
+            Mitglieder des Gemeinderats und des Gemeindevorstands erhalten hier die Unterlagen ihrer Sitzungen –
+            persönlich eingeladen, nur für das eigene Gremium, jederzeit im Browser abrufbar.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
-            <Link href="/antrag" className="btn-primary px-5 py-2.5 text-[14px]">Zugang beantragen</Link>
-            <Link href="/login" className="btn-secondary px-5 py-2.5 text-[14px]">Ich habe bereits Zugang</Link>
+            <Link href="/login" className="btn-primary px-5 py-2.5 text-[14px]">Anmelden</Link>
           </div>
         </div>
 
@@ -23,10 +22,10 @@ export default function Startseite() {
           <p className="eyebrow mb-4">So funktioniert der Zugang</p>
           <ol className="space-y-4">
             {[
-              { icon: MailCheck,   t: 'Antrag stellen',            d: 'Name, Funktion und E-Mail-Adresse angeben – jede Adresse funktioniert (Gmail, Outlook, Apple, …).' },
-              { icon: UserCheck,   t: 'Prüfung durch die Verwaltung', d: 'Die Gemeindeverwaltung prüft das aktive Mandat und gibt den Zugang persönlich frei. Nichts geschieht automatisch.' },
-              { icon: ShieldCheck, t: 'Anmeldung per E-Mail-Code',  d: 'Kein Passwort: Sie erhalten bei jeder Anmeldung einen Einmal-Code an Ihre E-Mail-Adresse.' },
-              { icon: FileText,    t: 'Protokolle lesen',           d: 'Nur die Protokolle Ihres Gremiums, als PDF direkt im Browser. Jeder Zugriff wird protokolliert.' },
+              { icon: UserCheck,   t: 'Zugang durch die Verwaltung', d: 'Die Gemeindeverwaltung legt Ihren Zugang persönlich an – mit jeder E-Mail-Adresse (Gmail, Outlook, Apple, …). Nichts geschieht automatisch.' },
+              { icon: MailCheck,   t: 'Einladung zur Sitzung',       d: 'Vor jeder Sitzung erhalten Sie eine persönliche E-Mail mit der offiziellen Einladung und dem Link zu den Unterlagen.' },
+              { icon: ShieldCheck, t: 'Anmeldung per E-Mail-Code',   d: 'Kein Passwort: Sie erhalten bei jeder Anmeldung einen Einmal-Code an Ihre E-Mail-Adresse.' },
+              { icon: Clock,       t: 'Unterlagen bis zur Sitzung',  d: 'Nur die Unterlagen Ihres Gremiums, als PDF im Browser – bis 24:00 Uhr am Sitzungstag. Jeder Zugriff wird protokolliert.' },
             ].map((s, i) => (
               <li key={s.t} className="flex gap-3">
                 <span className="shrink-0 w-8 h-8 rounded-lg bg-gk-blau-50 text-gk-blau flex items-center justify-center"><s.icon size={16} strokeWidth={1.75} /></span>
