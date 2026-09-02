@@ -20,3 +20,6 @@
 - Gremien (Migration 004) sind Daten, kein Code: Tabelle `gremien` mit `aktiv`; Pflege unter /verwaltung/gremien (anlegen, umbenennen, Reihenfolge, deaktivieren;
   löschen nur ohne Sitzungen/Mitglieder). Navigation, Filter, Chips und Auswahlfelder werden aus `ladeGremien()` gebaut (Mitglieder: nur eigene Gremien).
   Reihung lt. Jörgen: Gemeindevorstand (1), Gemeinderat (2), Ausschüsse alphabetisch (ab 10). Keine Gremien-Schlüssel im Code fest verdrahten.
+- Reports: `lib/reports.ts` (Abfragen) + `lib/pdf.ts` (eigener, abhängigkeitsfreier Tabellen-PDF-Generator, A4 quer, CD-Kopfleiste; CSV mit Semikolon+BOM).
+  Routen: /api/reports/zugriffe?format=csv|pdf&sitzung=&benutzer=&aktion=&von=&bis= (Verwaltung) und /api/reports/nachweis/<sitzung_id>?format=csv|pdf (Upload-Rollen).
+  Zeiten immer über `lib/format.ts` ausgeben (rechnet nach Europe/Vienna um – Vercel läuft in UTC).

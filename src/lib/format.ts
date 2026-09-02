@@ -1,21 +1,32 @@
 const MONATE = ['Jänner','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember']
+const TZ = 'Europe/Vienna'
+
+/** Datums-/Zeitbestandteile eines Zeitpunkts in Wiener Zeit (Server läuft in UTC!) */
+function teile(x: Date) {
+  const p = new Intl.DateTimeFormat('de-AT', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(x)
+  const g = (t: string) => p.find(q => q.type === t)?.value ?? ''
+  return { tag: g('day'), monat: g('month'), jahr: g('year'), stunde: g('hour').replace('24', '00'), minute: g('minute') }
+}
+
+/** Reine Datumsangaben (YYYY-MM-DD) werden ohne Zeitzonen-Verschiebung angezeigt */
+function nurDatum(d: string) { const [j, m, t] = d.split('-'); return { tag: t, monat: m, jahr: j } }
 
 export function datum(d: string | Date | null | undefined) {
   if (!d) return '–'
-  const x = typeof d === 'string' ? new Date(d.length === 10 ? d + 'T00:00:00' : d) : d
-  return `${String(x.getDate()).padStart(2, '0')}.${String(x.getMonth() + 1).padStart(2, '0')}.${x.getFullYear()}`
+  const t = typeof d === 'string' && d.length === 10 ? nurDatum(d) : teile(typeof d === 'string' ? new Date(d) : d)
+  return `${t.tag}.${t.monat}.${t.jahr}`
 }
 
 export function datumLang(d: string | Date | null | undefined) {
   if (!d) return '–'
-  const x = typeof d === 'string' ? new Date(d.length === 10 ? d + 'T00:00:00' : d) : d
-  return `${x.getDate()}. ${MONATE[x.getMonth()]} ${x.getFullYear()}`
+  const t = typeof d === 'string' && d.length === 10 ? nurDatum(d) : teile(typeof d === 'string' ? new Date(d) : d)
+  return `${Number(t.tag)}. ${MONATE[Number(t.monat) - 1]} ${t.jahr}`
 }
 
 export function zeit(d: string | Date | null | undefined) {
   if (!d) return '–'
-  const x = typeof d === 'string' ? new Date(d) : d
-  return `${datum(x)} ${String(x.getHours()).padStart(2, '0')}:${String(x.getMinutes()).padStart(2, '0')}`
+  const t = teile(typeof d === 'string' ? new Date(d) : d)
+  return `${t.tag}.${t.monat}.${t.jahr} ${t.stunde}:${t.minute}`
 }
 
 export function groesse(bytes: number | null | undefined) {

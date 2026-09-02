@@ -247,7 +247,13 @@ export default function SitzungenClient({ gremien, sitzungen, darfLoeschen }: { 
                   {zeigeNachweis ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                   <span className="font-mono">Nachweis: {s.einladungen.length} eingeladen · {bestaetigt} bestätigt · {geoeffnet} geöffnet{fehlgeschlagen ? ` · ${fehlgeschlagen} Mail-Fehler` : ''}</span>
                 </button>
-                {zeigeNachweis && <Nachweis s={s} offen={offen} pending={pending} onErneut={e => lauf(() => einladungErneutSendenAction(e.id))} />}
+                {zeigeNachweis && <>
+                  <div className="mt-2 flex gap-2">
+                    <a href={`/api/reports/nachweis/${s.id}?format=pdf`} className="btn-secondary !py-1 !text-[12px]">Nachweis als PDF</a>
+                    <a href={`/api/reports/nachweis/${s.id}?format=csv`} className="btn-secondary !py-1 !text-[12px]">CSV</a>
+                  </div>
+                  <Nachweis s={s} offen={offen} pending={pending} onErneut={e => lauf(() => einladungErneutSendenAction(e.id))} />
+                </>}
               </div>
             )}
           </section>
