@@ -10,7 +10,7 @@ export default function PublicShell({ children, breit = false }: { children: Rea
           <Link href="/" className="flex items-center gap-4 hover:opacity-90">
             <Logo className="h-12" />
             <span className="hidden sm:block border-l border-white/25 pl-4 leading-tight">
-              <span className="block font-display uppercase tracking-[.04em] text-[17px] font-semibold">Sitzungsprotokolle</span>
+              <span className="block font-display uppercase tracking-[.04em] text-[17px] font-semibold">Sitzungsunterlagen</span>
               <span className="block text-[12px] text-white/70">Gemeinderat · Gemeindevorstand</span>
             </span>
           </Link>

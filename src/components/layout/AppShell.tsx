@@ -32,7 +32,7 @@ export default function AppShell({ children, userName, userEmail, rolle, rolleLa
         <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">{children}</div>
         <footer className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 pt-2">
           <div className="border-t border-gk-line pt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-[11.5px] text-gk-text-2">
-            <span>Marktgemeinde Gumpoldskirchen · Sitzungsprotokolle für Gemeinderat und Gemeindevorstand</span>
+            <span>Marktgemeinde Gumpoldskirchen · Sitzungsunterlagen für Gemeinderat und Gemeindevorstand</span>
             <span className="font-mono text-[10.5px] text-gk-tertiary" title={buildSha ? `Build ${buildSha}` : undefined}>
               powered by ICP Solutions · {APP_VERSION}{buildSha ? ` · ${buildSha.slice(0, 7)}` : ''}
             </span>

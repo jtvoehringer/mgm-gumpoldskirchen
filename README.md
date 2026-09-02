@@ -1,6 +1,6 @@
-# Sitzungsprotokolle · Marktgemeinde Gumpoldskirchen
+# Sitzungsunterlagen · Marktgemeinde Gumpoldskirchen
 
-Web-Portal zur digitalen Bereitstellung der Sitzungsprotokolle von Gemeinderat und Gemeindevorstand.
+Web-Portal zur digitalen Bereitstellung der Sitzungsunterlagen von Gemeinderat und Gemeindevorstand.
 Zugang wird von Gemeinderäten beantragt und von der Gemeindeverwaltung **manuell** freigegeben – nie automatisch.
 
 ## Stack

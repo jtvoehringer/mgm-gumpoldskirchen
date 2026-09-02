@@ -1,4 +1,4 @@
-# Setup-Checkliste – Sitzungsprotokolle Gumpoldskirchen
+# Setup-Checkliste – Sitzungsunterlagen Gumpoldskirchen
 
 Erledigt (durch Claude, 02.09.2026):
 - Supabase-Projekt `mgm-gumpoldskirchen` (Ref `tqkldsdcffeotxeesnen`) angelegt, Schema eingespielt, Beispieldaten + Verwaltungs-User jv@icp-consultants.at

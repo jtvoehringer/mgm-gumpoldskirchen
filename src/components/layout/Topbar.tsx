@@ -47,7 +47,7 @@ export default function Topbar({ userName, userEmail, rolleLabel, istVerwaltung 
       <div className="h-14 max-w-6xl mx-auto px-4 lg:px-6 flex items-center gap-4">
         <Link href="/portal" className="shrink-0 flex items-center gap-3 hover:opacity-90" title="Zur Übersicht">
           <Logo className="h-9" />
-          <span className="hidden sm:inline font-display uppercase tracking-[.04em] text-[15px] font-semibold border-l border-white/25 pl-3 leading-none">Sitzungsprotokolle</span>
+          <span className="hidden sm:inline font-display uppercase tracking-[.04em] text-[15px] font-semibold border-l border-white/25 pl-3 leading-none">Sitzungsunterlagen</span>
         </Link>
         <div className="flex-1" />
         {istVerwaltung && (

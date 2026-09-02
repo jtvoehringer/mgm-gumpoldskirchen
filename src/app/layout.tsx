@@ -9,8 +9,8 @@ import '@fontsource/ibm-plex-mono/500.css'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: { default: 'Sitzungsprotokolle · Marktgemeinde Gumpoldskirchen', template: '%s · Sitzungsprotokolle Gumpoldskirchen' },
-  description: 'Digitale Bereitstellung der Sitzungsprotokolle von Gemeinderat und Gemeindevorstand der Marktgemeinde Gumpoldskirchen.',
+  title: { default: 'Sitzungsunterlagen · Marktgemeinde Gumpoldskirchen', template: '%s · Sitzungsunterlagen Gumpoldskirchen' },
+  description: 'Digitale Bereitstellung der Sitzungsunterlagen von Gemeinderat und Gemeindevorstand der Marktgemeinde Gumpoldskirchen.',
   icons: { icon: '/favicon.svg' },
 }
 

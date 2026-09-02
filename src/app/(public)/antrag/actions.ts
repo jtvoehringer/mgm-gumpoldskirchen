@@ -21,7 +21,7 @@ export async function antragSendenAction(_prev: AntragState, form: FormData): Pr
   await sendeMail(
     process.env.VERWALTUNG_EMAIL ?? '',
     `Neuer Zugangsantrag: ${feld('vorname')} ${feld('nachname')}`,
-    `${feld('vorname')} ${feld('nachname')} (${feld('funktion')}) hat Zugang zu den Sitzungsprotokollen beantragt.\n` +
+    `${feld('vorname')} ${feld('nachname')} (${feld('funktion')}) hat Zugang zu den Sitzungsunterlagen beantragt.\n` +
     `Gremien: ${gremien.join(', ')}\nE-Mail: ${feld('email')}\n\nPrüfung und Freigabe: ${process.env.NEXT_PUBLIC_APP_URL ?? ''}/verwaltung/antraege`
   )
   return { ok: true }

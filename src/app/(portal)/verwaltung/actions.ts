@@ -68,7 +68,7 @@ async function benutzerFreigeben(d: { email: string; vorname: string; nachname: 
 
   if (!neu) {
     // Bestehender Benutzer: Hinweis-Mail mit Login-Link (kein Supabase-Invite mehr möglich)
-    await sendeMail(email, 'Ihr Zugang zu den Sitzungsprotokollen wurde freigegeben',
+    await sendeMail(email, 'Ihr Zugang zu den Sitzungsunterlagen wurde freigegeben',
       `Ihr Zugang wurde (erneut) freigegeben. Anmeldung mit Ihrer E-Mail-Adresse unter ${process.env.NEXT_PUBLIC_APP_URL ?? ''}/login`)
   }
   return userId!
@@ -97,8 +97,8 @@ export async function antragEntscheidenAction(_p: AktionState, form: FormData): 
       await supabase.from('zugangsantraege').update({ status: 'genehmigt', begruendung, entschieden_am: new Date().toISOString(), entschieden_von: ich.id, user_id: userId }).eq('id', id)
     } else {
       await supabase.from('zugangsantraege').update({ status: 'abgelehnt', begruendung, entschieden_am: new Date().toISOString(), entschieden_von: ich.id }).eq('id', id)
-      await sendeMail((a as R).email, 'Ihr Antrag auf Zugang zu den Sitzungsprotokollen',
-        `Sehr geehrte/r ${(a as R).vorname} ${(a as R).nachname},\n\nIhr Antrag auf Zugang zu den Sitzungsprotokollen konnte nicht freigegeben werden.${begruendung ? `\n\nBegründung: ${begruendung}` : ''}\n\nBei Fragen wenden Sie sich bitte an die Gemeindeverwaltung.\n\nMarktgemeinde Gumpoldskirchen`)
+      await sendeMail((a as R).email, 'Ihr Antrag auf Zugang zu den Sitzungsunterlagen',
+        `Sehr geehrte/r ${(a as R).vorname} ${(a as R).nachname},\n\nIhr Antrag auf Zugang zu den Sitzungsunterlagen konnte nicht freigegeben werden.${begruendung ? `\n\nBegründung: ${begruendung}` : ''}\n\nBei Fragen wenden Sie sich bitte an die Gemeindeverwaltung.\n\nMarktgemeinde Gumpoldskirchen`)
     }
     revalidatePath('/verwaltung/antraege'); revalidatePath('/verwaltung/mitglieder'); revalidatePath('/portal')
     return { ok: true, info: entscheidung === 'genehmigen' ? 'Zugang freigegeben – Einladung wurde versendet.' : 'Antrag abgelehnt.' }

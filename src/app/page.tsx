@@ -8,7 +8,7 @@ export default function Startseite() {
       <section className="grid lg:grid-cols-[1.2fr_1fr] gap-8 items-start">
         <div>
           <p className="eyebrow mb-3">Marktgemeinde Gumpoldskirchen</p>
-          <h1 className="headline text-[40px] sm:text-[52px]">Sitzungsprotokolle<br />digital & sicher</h1>
+          <h1 className="headline text-[40px] sm:text-[52px]">Sitzungsunterlagen<br />digital & sicher</h1>
           <p className="mt-5 text-[16px] text-gk-text-1 leading-relaxed max-w-xl">
             Mitglieder des Gemeinderats und des Gemeindevorstands erhalten hier Zugang zu den Protokollen ihrer Sitzungen –
             gegliedert nach Gremium und Jahr, jederzeit im Browser abrufbar.

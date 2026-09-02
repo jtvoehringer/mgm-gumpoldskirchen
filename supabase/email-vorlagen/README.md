@@ -4,8 +4,8 @@ Einfügen unter Supabase → Authentication → Emails (Templates):
 
 | Vorlage | Datei | Betreff |
 |---|---|---|
-| Magic Link | `magic-link.html` | Ihr Anmelde-Code für die Sitzungsprotokolle Gumpoldskirchen |
-| Invite user | `einladung.html` | Ihr Zugang zu den Sitzungsprotokollen wurde freigegeben |
+| Magic Link | `magic-link.html` | Ihr Anmelde-Code für die Sitzungsunterlagen Gumpoldskirchen |
+| Invite user | `einladung.html` | Ihr Zugang zu den Sitzungsunterlagen wurde freigegeben |
 
 Platzhalter: `{{ .Token }}` = Einmal-Code, `{{ .ConfirmationURL }}` = Anmelde-/Einladungslink, `{{ .Email }}` = Adresse.
 
