@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Design-Tokens lt. CD-Manual Marktgemeinde Gumpoldskirchen (November 2022) */
+  --c-blau:        #004B72;
+  --c-gruen:       #A8C959;
+  --c-gruen-text:  #98B652;
+  --c-wein:        #9F456D;
+  --c-bg:          #F5F7F9;
+  --c-surface:     #FFFFFF;
+  --c-line:        #E6EAEE;
+  --c-text:        #1E2B36;
+  --c-text-1:      #4A5A68;
+
+  /* Schriften: Corporate Font „Verb" ist lizenzpflichtig – lt. CD ist Franklin Gothic die
+     Systemschrift-Alternative; im Web wird die freie Libre Franklin (Fließtext) und
+     Barlow Condensed (Headlines in Versalien, analog Verb Comp/ExCond) eingesetzt. */
+  --font-franklin:  'Libre Franklin';
+  --font-condensed: 'Barlow Condensed';
+  --font-mono:      'IBM Plex Mono';
+}
+
+@layer base {
+  body {
+    background-color: var(--c-bg);
+    color: var(--c-text);
+    font-family: var(--font-franklin), 'Franklin Gothic', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-condensed), 'Franklin Gothic', system-ui, sans-serif;
+    font-weight: 600;
+    color: var(--c-blau);
+    letter-spacing: .01em;
+  }
+}
+
+@layer components {
+  /* Versal-Headline lt. CD (Verb Comp Semibold, immer in Großbuchstaben) */
+  .headline {
+    @apply font-display font-semibold uppercase tracking-[.02em] text-gk-blau leading-[1.05];
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-gk-blau text-white px-4 py-2 rounded-lg text-[13.5px] font-semibold
+           hover:bg-gk-blau-700 disabled:opacity-50 transition-colors
+           focus:outline-none focus:ring-4 focus:ring-gk-blau-50;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 bg-white text-gk-text-1 border border-gk-line-str px-4 py-2 rounded-lg text-[13.5px] font-medium
+           hover:bg-gk-bg hover:text-gk-text disabled:opacity-50 transition-colors
+           focus:outline-none focus:ring-4 focus:ring-gk-blau-50;
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 bg-white text-gk-err-fg border border-gk-wein/40 px-4 py-2 rounded-lg text-[13.5px] font-medium
+           hover:bg-gk-wein-bg disabled:opacity-50 transition-colors;
+  }
+  .card {
+    @apply bg-white rounded-xl border border-gk-line p-5 sm:p-6;
+  }
+  .input, .form-input {
+    @apply w-full px-3 py-2 border border-gk-line-str rounded-lg text-sm bg-white text-gk-text
+           focus:outline-none focus:border-gk-blau focus:ring-4 focus:ring-gk-blau-50
+           placeholder:text-gk-tertiary transition-colors disabled:bg-gk-bg disabled:text-gk-text-2;
+  }
+  .form-label {
+    @apply block text-[12.5px] font-semibold text-gk-text-1 mb-1;
+  }
+  .eyebrow {
+    @apply font-mono text-[10.5px] font-semibold uppercase tracking-[.14em] text-gk-tertiary;
+  }
+  .kpi {
+    @apply font-mono text-[26px] font-medium text-gk-text leading-none tabular-nums;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 font-mono text-[10.5px] font-medium uppercase tracking-[.08em] px-2 py-[3px] rounded-md;
+  }
+  /* Der grüne Balken – Stilelement lt. CD, hier als schmale Linie unter der Kopfleiste */
+  .gruener-balken {
+    @apply h-[5px] bg-gk-gruen;
+  }
+  table.liste { @apply w-full text-[13.5px]; }
+  table.liste th {
+    @apply text-left font-mono text-[10.5px] font-semibold uppercase tracking-[.12em] text-gk-tertiary py-2 px-3 border-b border-gk-line;
+  }
+  table.liste td { @apply py-2.5 px-3 border-b border-gk-line align-middle; }
+  table.liste tr:last-child td { @apply border-b-0; }
+}
