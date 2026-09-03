@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { FileText, Users, Upload } from 'lucide-react'
-import { getProfil } from '@/lib/auth/roles'
+import { getProfil, canAdmin } from '@/lib/auth/roles'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { ladeSitzungen, ladeGremien } from '@/lib/protokolle'
 import { datum, datumLang } from '@/lib/format'
@@ -20,7 +20,7 @@ export default async function Uebersicht() {
   })).filter(x => profil.rolle !== 'mitglied' || profil.gremien.includes(x.g.schluessel))
 
   let mitglieder = 0
-  if (profil.rolle === 'verwaltung') {
+  if (canAdmin(profil.rolle)) {
     const { count: m } = await supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('aktiv', true).eq('rolle', 'mitglied')
     mitglieder = m ?? 0
   }
@@ -39,7 +39,7 @@ export default async function Uebersicht() {
         {proGremium.map(x => (
           <Kpi key={x.g.id} label={x.g.name} wert={x.sitzungen} hinweis={`${x.sitzungen === 1 ? 'Sitzung' : 'Sitzungen'} · ${x.protokolle} ${x.protokolle === 1 ? 'Dokument' : 'Dokumente'}`} href={`/protokolle/${x.g.schluessel}`} />
         ))}
-        {profil.rolle === 'verwaltung' && <>
+        {canAdmin(profil.rolle) && <>
           <Kpi label="Aktive Mitglieder" wert={mitglieder} hinweis="mit Lesezugriff" href="/verwaltung/mitglieder" />
         </>}
       </div>
@@ -70,7 +70,7 @@ export default async function Uebersicht() {
         </section>
 
         <aside className="space-y-4">
-          {profil.rolle === 'verwaltung' && (
+          {canAdmin(profil.rolle) && (
             <section className="card">
               <h2 className="font-display uppercase tracking-[.03em] text-[19px] mb-3">Verwaltung</h2>
               <ul className="space-y-1.5 text-[13.5px]">

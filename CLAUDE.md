@@ -23,3 +23,6 @@
 - Reports: `lib/reports.ts` (Abfragen) + `lib/pdf.ts` (eigener, abhängigkeitsfreier Tabellen-PDF-Generator, A4 quer, CD-Kopfleiste; CSV mit Semikolon+BOM).
   Routen: /api/reports/zugriffe?format=csv|pdf&sitzung=&benutzer=&aktion=&von=&bis= (Verwaltung) und /api/reports/nachweis/<sitzung_id>?format=csv|pdf (Upload-Rollen).
   Zeiten immer über `lib/format.ts` ausgeben (rechnet nach Europe/Vienna um – Vercel läuft in UTC).
+- Rollen (Migration 005): `superadmin` (ICP-Support, Jörgen) = alle Rechte der Verwaltung (`canAdmin`); die Verwaltung sieht ihn als Badge und kann ihn
+  nur aktivieren/deaktivieren (Schild-Icons), Rolle/Daten nicht ändern; nur ein Superadmin kann die Rolle superadmin vergeben. Benutzer anlegen
+  verschickt KEINE Mail mehr (`auth.admin.createUser` mit email_confirm) – Anmelde-Link auf Wunsch über das Senden-Symbol (signInWithOtp).

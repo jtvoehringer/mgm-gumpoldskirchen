@@ -3,8 +3,9 @@
 import { revalidatePath } from 'next/cache'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { createSupabaseAdminClient } from '@/lib/supabase/admin'
-import { getProfil, canAdmin, canUpload } from '@/lib/auth/roles'
-import { sendeMail, sendeMailMitFehler } from '@/lib/mail'
+import type { Rolle } from '@/lib/auth/rollen'
+import { getProfil, canAdmin, canUpload, isSuperadmin } from '@/lib/auth/roles'
+import { sendeMailMitFehler } from '@/lib/mail'
 import { baueEinladungsmail } from '@/lib/einladungsmail'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -30,30 +31,26 @@ async function gremiumIds(schluessel: string[]) {
 }
 
 /**
- * Benutzer für eine E-Mail sicherstellen: vorhandenes Profil reaktivieren, sonst per Supabase-Einladung anlegen.
- * Liefert die user_id. Der manuelle Freigabeschritt ist damit der einzige Weg zu einem Zugang.
+ * Benutzer für eine E-Mail sicherstellen: vorhandenes Profil reaktivieren, sonst Konto anlegen – OHNE Mailversand.
+ * Den Anmelde-Link schickt die Verwaltung bei Bedarf über das Senden-Symbol (oder die Sitzungseinladung).
+ * Liefert die user_id. Das Anlegen durch die Verwaltung ist der einzige Weg zu einem Zugang.
  */
 async function benutzerFreigeben(d: { email: string; vorname: string; nachname: string; funktion: string | null; fraktion: string | null; gremien: string[]; rolle?: string }) {
   const admin = createSupabaseAdminClient()
   const email = d.email.toLowerCase()
   const { data: vorhanden } = await admin.from('profiles').select('id').eq('email', email).maybeSingle()
   let userId = (vorhanden as R | null)?.id as string | undefined
-  let neu = false
 
   if (!userId) {
-    const { data, error } = await admin.auth.admin.inviteUserByEmail(email, {
-      data: { vorname: d.vorname, nachname: d.nachname },
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/auth/callback?weiter=/portal`,
-    })
+    const { data, error } = await admin.auth.admin.createUser({ email, email_confirm: true, user_metadata: { vorname: d.vorname, nachname: d.nachname } })
     if (error) {
       // Benutzer existiert evtl. schon in auth.users ohne Profil → nachschlagen
       const { data: liste } = await admin.auth.admin.listUsers({ perPage: 1000 })
       const u = liste?.users.find(x => x.email?.toLowerCase() === email)
-      if (!u) throw new Error(`Einladung fehlgeschlagen: ${error.message}`)
+      if (!u) throw new Error(`Konto konnte nicht angelegt werden: ${error.message}`)
       userId = u.id
     } else {
       userId = data.user.id
-      neu = true
     }
   }
 
@@ -67,25 +64,21 @@ async function benutzerFreigeben(d: { email: string; vorname: string; nachname: 
   const ids = await gremiumIds(d.gremien)
   if (ids.length) await admin.from('mitglied_gremien').insert(ids.map(gremium_id => ({ user_id: userId, gremium_id })))
 
-  if (!neu) {
-    // Bestehender Benutzer: Hinweis-Mail mit Login-Link (kein Supabase-Invite mehr möglich)
-    await sendeMail(email, 'Ihr Zugang zu den Sitzungsunterlagen wurde freigegeben',
-      `Ihr Zugang wurde (erneut) freigegeben. Anmeldung mit Ihrer E-Mail-Adresse unter ${process.env.NEXT_PUBLIC_APP_URL ?? ''}/login`)
-  }
   return userId!
 }
 
 // ── Mitglieder ──────────────────────────────────────────────────────────────
 export async function mitgliedAnlegenAction(_p: AktionState, form: FormData): Promise<AktionState> {
   try {
-    await verwaltungPflicht()
+    const ich = await verwaltungPflicht()
     const f = (k: string) => String(form.get(k) ?? '').trim()
     if (!f('email') || !f('vorname') || !f('nachname')) return { fehler: 'E-Mail, Vor- und Nachname sind Pflicht.' }
-    const rolle = ['verwaltung', 'schriftfuehrung', 'mitglied'].includes(f('rolle')) ? f('rolle') : 'mitglied'
+    const erlaubt = isSuperadmin(ich.rolle) ? ['superadmin', 'verwaltung', 'schriftfuehrung', 'mitglied'] : ['verwaltung', 'schriftfuehrung', 'mitglied']
+    const rolle = erlaubt.includes(f('rolle')) ? f('rolle') : 'mitglied'
     await benutzerFreigeben({ email: f('email'), vorname: f('vorname'), nachname: f('nachname'), funktion: f('funktion') || null,
       fraktion: f('fraktion') || null, gremien: form.getAll('gremien').map(String), rolle })
     revalidatePath('/verwaltung/mitglieder')
-    return { ok: true, info: 'Benutzer angelegt – Einladung wurde versendet.' }
+    return { ok: true, info: 'Benutzer angelegt. Es wurde keine E-Mail versendet – den Anmelde-Link bei Bedarf über das Senden-Symbol verschicken.' }
   } catch (e) { return { fehler: (e as Error).message } }
 }
 
@@ -95,6 +88,13 @@ export async function mitgliedAendernAction(_p: AktionState, form: FormData): Pr
     const id = String(form.get('id'))
     const was = String(form.get('was'))
     const admin = createSupabaseAdminClient()
+
+    const { data: zielProfil } = await admin.from('profiles').select('rolle').eq('id', id).maybeSingle()
+    const zielRolle = (zielProfil as R | null)?.rolle as string | undefined
+    // Superadmin (ICP-Support): Verwaltung darf ihn nur aktivieren/deaktivieren, sonst nichts ändern
+    if (zielRolle === 'superadmin' && !isSuperadmin(ich.rolle) && was !== 'deaktivieren' && was !== 'aktivieren') {
+      return { fehler: 'Der Superadmin-Zugang kann von der Verwaltung nur aktiviert oder deaktiviert werden.' }
+    }
 
     if (was === 'deaktivieren' || was === 'aktivieren') {
       if (id === ich.id && was === 'deaktivieren') return { fehler: 'Sie können sich nicht selbst deaktivieren.' }
@@ -106,8 +106,9 @@ export async function mitgliedAendernAction(_p: AktionState, form: FormData): Pr
       if (ids.length) await admin.from('mitglied_gremien').insert(ids.map(gremium_id => ({ user_id: id, gremium_id })))
     } else if (was === 'rolle') {
       const rolle = String(form.get('rolle'))
-      if (!['verwaltung', 'schriftfuehrung', 'mitglied'].includes(rolle)) return { fehler: 'Ungültige Rolle.' }
-      if (id === ich.id && rolle !== 'verwaltung') return { fehler: 'Sie können Ihre eigene Rolle nicht herabstufen.' }
+      const erlaubt = isSuperadmin(ich.rolle) ? ['superadmin', 'verwaltung', 'schriftfuehrung', 'mitglied'] : ['verwaltung', 'schriftfuehrung', 'mitglied']
+      if (!erlaubt.includes(rolle)) return { fehler: 'Ungültige Rolle.' }
+      if (id === ich.id && !canAdmin(rolle as Rolle)) return { fehler: 'Sie können Ihre eigene Rolle nicht herabstufen.' }
       await admin.from('profiles').update({ rolle }).eq('id', id)
     } else if (was === 'bearbeiten') {
       // Stammdaten ändern; E-Mail-Änderung auch im Auth-Konto (ohne Bestätigungsmail)

@@ -14,9 +14,9 @@ export function buildNav(rolle: Rolle, gremien: NavGremium[] = []): NavGroup[] {
       ...gremien.map(g => ({ label: g.name, href: `/protokolle/${g.schluessel}` })),
     ] },
   ]
-  if (rolle === 'verwaltung' || rolle === 'schriftfuehrung') {
+  if (rolle === 'superadmin' || rolle === 'verwaltung' || rolle === 'schriftfuehrung') {
     const items: NavItem[] = [{ label: 'Sitzungen & Upload', href: '/verwaltung/sitzungen' }]
-    if (rolle === 'verwaltung') {
+    if (rolle === 'superadmin' || rolle === 'verwaltung') {
       items.push({ label: 'Mitglieder', href: '/verwaltung/mitglieder' })
       items.push({ label: 'Gremien', href: '/verwaltung/gremien' })
       items.push({ label: 'Zugriffsprotokoll', href: '/verwaltung/zugriffe' })

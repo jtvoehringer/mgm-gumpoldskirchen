@@ -24,7 +24,7 @@ export default async function MitgliederSeite() {
     <div>
       <PageHeader eyebrow="Verwaltung" titel="Mitglieder & Benutzer"
         beschreibung={`${mitglieder.filter(m => m.aktiv).length} aktive Benutzer · Zugriff kann jederzeit entzogen werden.`} />
-      <MitgliederClient mitglieder={mitglieder} gremien={gremien} ichId={profil.id} />
+      <MitgliederClient mitglieder={mitglieder} gremien={gremien} ichId={profil.id} ichRolle={profil.rolle} />
     </div>
   )
 }

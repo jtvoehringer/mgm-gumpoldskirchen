@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useState, useTransition } from 'react'
-import { UserPlus, Ban, RotateCcw, Send, Pencil, Check, X } from 'lucide-react'
+import { UserPlus, Ban, RotateCcw, Send, Pencil, Check, X, ShieldCheck, ShieldOff, LifeBuoy } from 'lucide-react'
 import { mitgliedAnlegenAction, mitgliedAendernAction, type AktionState } from '../actions'
 import { ROLLEN_LABEL, type Rolle } from '@/lib/auth/rollen'
 import { StatusBadge, Leer } from '@/components/ui'
@@ -11,7 +11,9 @@ import type { Gremium } from '@/lib/protokolle'
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type R = Record<string, any>
 
-export default function MitgliederClient({ mitglieder, gremien, ichId }: { mitglieder: R[]; gremien: Gremium[]; ichId: string }) {
+export default function MitgliederClient({ mitglieder, gremien, ichId, ichRolle }: { mitglieder: R[]; gremien: Gremium[]; ichId: string; ichRolle: Rolle }) {
+  const binSuperadmin = ichRolle === 'superadmin'
+  const rollenAuswahl = (Object.keys(ROLLEN_LABEL) as Rolle[]).filter(r => r !== 'superadmin' || binSuperadmin)
   const [neuOffen, setNeuOffen] = useState(false)
   const [filter, setFilter] = useState('')
   const [neuState, neuAction, neuPending] = useActionState<AktionState, FormData>(mitgliedAnlegenAction, {})
@@ -32,7 +34,7 @@ export default function MitgliederClient({ mitglieder, gremien, ichId }: { mitgl
 
       {neuOffen && (
         <form action={neuAction} className="card border-l-4 border-l-gk-gruen space-y-4">
-          <p className="text-[14px] font-semibold">Benutzer anlegen – die Zugangs-Einladung wird per E-Mail versendet.</p>
+          <p className="text-[14px] font-semibold">Benutzer anlegen – es wird keine E-Mail versendet. Den Anmelde-Link bei Bedarf über das Senden-Symbol in der Liste verschicken.</p>
           <div className="grid sm:grid-cols-3 gap-3">
             <div><label className="form-label">Vorname *</label><input name="vorname" required className="input" /></div>
             <div><label className="form-label">Nachname *</label><input name="nachname" required className="input" /></div>
@@ -41,7 +43,7 @@ export default function MitgliederClient({ mitglieder, gremien, ichId }: { mitgl
             <div><label className="form-label">Fraktion</label><input name="fraktion" className="input" /></div>
             <div><label className="form-label">Rolle</label>
               <select name="rolle" className="input" defaultValue="mitglied">
-                {(Object.keys(ROLLEN_LABEL) as Rolle[]).map(r => <option key={r} value={r}>{ROLLEN_LABEL[r]}</option>)}
+                {rollenAuswahl.map(r => <option key={r} value={r}>{ROLLEN_LABEL[r]}</option>)}
               </select></div>
           </div>
           <div>
@@ -54,7 +56,7 @@ export default function MitgliederClient({ mitglieder, gremien, ichId }: { mitgl
           {neuState.ok && <p className="text-[13px] text-gk-ok-fg bg-gk-ok-bg rounded-lg px-3 py-2">{neuState.info}</p>}
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => setNeuOffen(false)} className="btn-secondary">Schließen</button>
-            <button type="submit" disabled={neuPending} className="btn-primary"><Send size={15} /> Anlegen & einladen</button>
+            <button type="submit" disabled={neuPending} className="btn-primary"><UserPlus size={15} /> Anlegen</button>
           </div>
         </form>
       )}
@@ -86,13 +88,17 @@ export default function MitgliederClient({ mitglieder, gremien, ichId }: { mitgl
                 </tr>
               ) : (
                 <tr key={m.id} className={m.aktiv ? '' : 'opacity-60'}>
-                  <td><p className="font-semibold">{m.vorname} {m.nachname}{m.id === ichId && <span className="ml-1.5 font-mono text-[10px] text-gk-tertiary">(Sie)</span>}</p>
+                  <td><p className="font-semibold flex items-center gap-1.5">{m.rolle === 'superadmin' && <LifeBuoy size={14} className="text-gk-wein" />}{m.vorname} {m.nachname}{m.id === ichId && <span className="ml-1 font-mono text-[10px] text-gk-tertiary">(Sie)</span>}</p>
                     <p className="text-[12.5px] text-gk-text-2">{[m.funktion, m.fraktion].filter(Boolean).join(' · ')}{m.funktion || m.fraktion ? ' · ' : ''}{m.email}</p></td>
                   <td>
-                    <select defaultValue={m.rolle} disabled={pending || m.id === ichId} className="input !py-1 !text-[12.5px] !w-auto"
-                      onChange={e => { const fd = new FormData(); fd.set('id', m.id); fd.set('was', 'rolle'); fd.set('rolle', e.target.value); aendern(fd) }}>
-                      {(Object.keys(ROLLEN_LABEL) as Rolle[]).map(r => <option key={r} value={r}>{ROLLEN_LABEL[r]}</option>)}
-                    </select>
+                    {m.rolle === 'superadmin' && !binSuperadmin ? (
+                      <span className="badge bg-gk-wein-bg text-gk-wein" title="ICP-Support – kann von der Verwaltung nur aktiviert/deaktiviert werden">SUPERADMIN</span>
+                    ) : (
+                      <select defaultValue={m.rolle} disabled={pending || m.id === ichId} className="input !py-1 !text-[12.5px] !w-auto"
+                        onChange={e => { const fd = new FormData(); fd.set('id', m.id); fd.set('was', 'rolle'); fd.set('rolle', e.target.value); aendern(fd) }}>
+                        {rollenAuswahl.map(r => <option key={r} value={r}>{ROLLEN_LABEL[r]}</option>)}
+                      </select>
+                    )}
                   </td>
                   <td>
                     {m.rolle === 'mitglied' ? (
@@ -113,8 +119,18 @@ export default function MitgliederClient({ mitglieder, gremien, ichId }: { mitgl
                   <td><StatusBadge status={m.aktiv ? 'aktiv' : 'deaktiviert'} /></td>
                   <td className="font-mono text-[12px] text-gk-text-2 whitespace-nowrap">{m.letzter_login ? datum(m.letzter_login) : '–'}</td>
                   <td className="whitespace-nowrap text-right">
+                    {m.rolle === 'superadmin' && !binSuperadmin ? (
+                      // Support-Zugang: Verwaltung schaltet den Superadmin bei Bedarf frei bzw. wieder ab
+                      m.aktiv ? (
+                        <button disabled={pending} title="Support-Zugang (Superadmin) deaktivieren" className="p-1.5 rounded-md hover:bg-gk-err-bg text-gk-err-fg"
+                          onClick={() => { if (!confirm('Support-Zugang von ICP deaktivieren? Sie können ihn jederzeit wieder aktivieren.')) return; const fd = new FormData(); fd.set('id', m.id); fd.set('was', 'deaktivieren'); aendern(fd) }}><ShieldOff size={15} /></button>
+                      ) : (
+                        <button disabled={pending} title="Support-Zugang (Superadmin) aktivieren" className="p-1.5 rounded-md hover:bg-gk-ok-bg text-gk-ok-fg"
+                          onClick={() => { const fd = new FormData(); fd.set('id', m.id); fd.set('was', 'aktivieren'); aendern(fd) }}><ShieldCheck size={15} /></button>
+                      )
+                    ) : <>
                     <button disabled={pending} title="Bearbeiten" className="p-1.5 rounded-md hover:bg-gk-bg text-gk-text-2" onClick={() => { setMeldung({}); setBearbeite(m.id) }}><Pencil size={15} /></button>
-                    <button disabled={pending} title="Anmelde-Link erneut senden" className="p-1.5 rounded-md hover:bg-gk-bg text-gk-text-2"
+                    <button disabled={pending} title="Anmelde-Link senden" className="p-1.5 rounded-md hover:bg-gk-bg text-gk-text-2"
                       onClick={() => { const fd = new FormData(); fd.set('id', m.id); fd.set('was', 'einladung'); aendern(fd) }}><Send size={15} /></button>
                     {m.aktiv ? (
                       <button disabled={pending || m.id === ichId} title="Zugriff entziehen" className="p-1.5 rounded-md hover:bg-gk-err-bg text-gk-err-fg disabled:opacity-30"
@@ -123,6 +139,7 @@ export default function MitgliederClient({ mitglieder, gremien, ichId }: { mitgl
                       <button disabled={pending} title="Zugriff wieder aktivieren" className="p-1.5 rounded-md hover:bg-gk-ok-bg text-gk-ok-fg"
                         onClick={() => { const fd = new FormData(); fd.set('id', m.id); fd.set('was', 'aktivieren'); aendern(fd) }}><RotateCcw size={15} /></button>
                     )}
+                    </>}
                   </td>
                 </tr>
               ))}
