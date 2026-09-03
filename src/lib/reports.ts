@@ -53,20 +53,20 @@ export function zugriffeAlsTabelle(zeilen: ZugriffsZeile[]) {
   }
 }
 
-export type NachweisZeile = { mitglied: string; email: string; gesendet: string; bestaetigt: string; geoeffnet: string; fehler: string }
+export type NachweisZeile = { mitglied: string; email: string; gesendet: string; bestaetigt: string; geoeffnet: string; fehler: string; kontrolle: boolean }
 
 /** Nachweisliste einer Sitzung: wer eingeladen, wer bestätigt, wer geöffnet */
 export async function ladeNachweis(sitzungId: string) {
   const supabase = await createSupabaseServerClient()
   const { data: s } = await (supabase.from('sitzungen') as R)
-    .select('id, titel, datum, uhrzeit, status, zugriff_bis, eingeladen_am, gremien(name, kurz), sitzungs_einladungen(gesendet_am, mail_fehler, bestaetigt_am, erste_ansicht_am, profiles(vorname, nachname, email))')
+    .select('id, titel, datum, uhrzeit, status, zugriff_bis, eingeladen_am, gremien(name, kurz), sitzungs_einladungen(kontrolle, gesendet_am, mail_fehler, bestaetigt_am, erste_ansicht_am, profiles(vorname, nachname, email))')
     .eq('id', sitzungId).maybeSingle()
   if (!s) return null
   const zeilen: NachweisZeile[] = ((s.sitzungs_einladungen ?? []) as R[])
     .map(e => ({
       mitglied: `${e.profiles?.nachname ?? ''} ${e.profiles?.vorname ?? ''}`.trim(), email: e.profiles?.email ?? '',
       gesendet: e.gesendet_am ? zeit(e.gesendet_am) : '–', bestaetigt: e.bestaetigt_am ? zeit(e.bestaetigt_am) : '–',
-      geoeffnet: e.erste_ansicht_am ? zeit(e.erste_ansicht_am) : '–', fehler: e.mail_fehler ?? '',
-    })).sort((a, b) => a.mitglied.localeCompare(b.mitglied))
+      geoeffnet: e.erste_ansicht_am ? zeit(e.erste_ansicht_am) : '–', fehler: e.mail_fehler ?? '', kontrolle: !!e.kontrolle,
+    })).sort((a, b) => Number(a.kontrolle) - Number(b.kontrolle) || a.mitglied.localeCompare(b.mitglied))
   return { sitzung: s as R, zeilen }
 }

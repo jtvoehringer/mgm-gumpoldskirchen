@@ -53,9 +53,9 @@ function Nachweis({ s, offen, pending, onErneut }: { s: Sitzung; offen: boolean;
           <table className="liste text-[12.5px]">
             <thead><tr><th>Mitglied</th><th>Einladung gesendet</th><th>Bestätigt</th><th>Erstes Öffnen</th><th></th></tr></thead>
             <tbody>
-              {s.einladungen.map(e => (
-                <tr key={e.id}>
-                  <td>{e.profil ? `${e.profil.nachname} ${e.profil.vorname}` : '–'}<br /><span className="text-[11.5px] text-gk-text-2">{e.profil?.email}</span></td>
+              {[...s.einladungen].sort((a, b) => Number(a.kontrolle) - Number(b.kontrolle)).map(e => (
+                <tr key={e.id} className={e.kontrolle ? 'bg-gk-bg/60' : ''}>
+                  <td>{e.profil ? `${e.profil.nachname} ${e.profil.vorname}` : '–'}{e.kontrolle && <span className="badge bg-gk-wein-bg text-gk-wein ml-2">Kontrollkopie</span>}<br /><span className="text-[11.5px] text-gk-text-2">{e.profil?.email}</span></td>
                   <td><Zelle wert={e.gesendet_am} fehler={e.mail_fehler} /></td>
                   <td><Zelle wert={e.bestaetigt_am} /></td>
                   <td><Zelle wert={e.erste_ansicht_am} /></td>
@@ -181,8 +181,9 @@ export default function SitzungenClient({ gremien, sitzungen, darfLoeschen }: { 
       {liste.length === 0 ? <div className="card"><Leer text="Noch keine Sitzungen angelegt." /></div> : liste.map(s => {
         const status = sitzungStatus(s)
         const freigegeben = s.protokolle.filter(p => p.freigegeben).length
-        const bestaetigt = s.einladungen.filter(e => e.bestaetigt_am).length
-        const geoeffnet = s.einladungen.filter(e => e.erste_ansicht_am).length
+        const mitglieder = s.einladungen.filter(e => !e.kontrolle)
+        const bestaetigt = mitglieder.filter(e => e.bestaetigt_am).length
+        const geoeffnet = mitglieder.filter(e => e.erste_ansicht_am).length
         const fehlgeschlagen = s.einladungen.filter(e => !e.gesendet_am && e.mail_fehler).length
         const offen = status === 'eingeladen'
         const zeigeNachweis = !!nachweisOffen[s.id]
@@ -245,7 +246,7 @@ export default function SitzungenClient({ gremien, sitzungen, darfLoeschen }: { 
               <div className="mt-3">
                 <button onClick={() => setNachweisOffen(o => ({ ...o, [s.id]: !o[s.id] }))} className="flex items-center gap-2 text-[12.5px] text-gk-text-1 hover:text-gk-blau">
                   {zeigeNachweis ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                  <span className="font-mono">Nachweis: {s.einladungen.length} eingeladen · {bestaetigt} bestätigt · {geoeffnet} geöffnet{fehlgeschlagen ? ` · ${fehlgeschlagen} Mail-Fehler` : ''}</span>
+                  <span className="font-mono">Nachweis: {mitglieder.length} eingeladen · {bestaetigt} bestätigt · {geoeffnet} geöffnet{fehlgeschlagen ? ` · ${fehlgeschlagen} Mail-Fehler` : ''}</span>
                 </button>
                 {zeigeNachweis && <>
                   <div className="mt-2 flex gap-2">

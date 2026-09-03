@@ -29,3 +29,5 @@
 - Passwort-Anmeldung (03.09.2026): nur für Rollen verwaltung/superadmin – Login-Seite „Anmeldung mit Passwort", eigenes Passwort im Profil
   (`passwortSetzenAction`, min. 10 Zeichen), Start-Passwort durch Verwaltung im Mitglieder-Screen (Schlüssel-Icon, `was='passwort'`).
   Mitglieder bleiben beim Einmal-Code. Konten aus der alten Einladungs-Variante müssen `email_confirmed_at` haben, sonst „Signups not allowed" beim Code.
+- Kontrollkopie (Migration 006): `sitzung_einladen` legt zusätzlich für alle aktiven `verwaltung`-Konten eine Einladung mit `kontrolle = true` an →
+  gleiche Mail (Betreff „Kontrollkopie – …", Hinweisbalken, Anhang, JA-Button). In Nachweisliste/Report getrennt ausgewiesen und nicht mitgezählt.

@@ -271,7 +271,7 @@ export async function sitzungEinladenAction(id: string): Promise<AktionState> {
       const mail = baueEinladungsmail({
         anrede: `Guten Tag ${e.vorname} ${e.nachname},`.replace(/\s+,/, ','),
         gremium: s.gremien?.name ?? '', titel: s.titel, datum: s.datum, uhrzeit: s.uhrzeit, ort: s.ort,
-        anzahlDokumente, link: `${basis}/einladung/${e.token}`, anhangName: anhang?.filename,
+        anzahlDokumente, link: `${basis}/einladung/${e.token}`, anhangName: anhang?.filename, kontrolle: !!e.kontrolle,
       })
       const r = await sendeMailMitFehler(e.email, mail.betreff, mail.text, mail.html, anhang ? [anhang] : [])
       await admin.from('sitzungs_einladungen').update(r.ok ? { gesendet_am: new Date().toISOString(), mail_fehler: null } : { mail_fehler: r.fehler ?? 'unbekannt' }).eq('id', e.einladung_id)
@@ -281,8 +281,8 @@ export async function sitzungEinladenAction(id: string): Promise<AktionState> {
     void ich
     revalidatePath('/verwaltung/sitzungen'); revalidatePath('/protokolle', 'layout'); revalidatePath('/portal')
     return fehler
-      ? { ok: true, info: `${gesendet} Einladung(en) versendet, ${fehler} fehlgeschlagen – Details in der Nachweisliste.` }
-      : { ok: true, info: `${gesendet} Einladung(en) versendet. Zugriff bis 24:00 Uhr am Sitzungstag.` }
+      ? { ok: true, info: `${gesendet} Einladung(en) versendet (inkl. Kontrollkopie an die Verwaltung), ${fehler} fehlgeschlagen – Details in der Nachweisliste.` }
+      : { ok: true, info: `${gesendet} Einladung(en) versendet, inkl. Kontrollkopie an die Verwaltung. Zugriff bis 24:00 Uhr am Sitzungstag.` }
   } catch (e) { return { fehler: (e as Error).message } }
 }
 
@@ -292,7 +292,7 @@ export async function einladungErneutSendenAction(einladungId: string): Promise<
     await uploadPflicht()
     const admin = createSupabaseAdminClient()
     const { data: e } = await (admin.from('sitzungs_einladungen') as R)
-      .select('id, token, user_id, profiles(email, vorname, nachname), sitzungen(id, titel, datum, uhrzeit, ort, status, zugriff_bis, gremien(name), protokolle(freigegeben))')
+      .select('id, token, user_id, kontrolle, profiles(email, vorname, nachname), sitzungen(id, titel, datum, uhrzeit, ort, status, zugriff_bis, gremien(name), protokolle(freigegeben))')
       .eq('id', einladungId).maybeSingle()
     if (!e) return { fehler: 'Einladung nicht gefunden.' }
     if (e.sitzungen.status !== 'eingeladen' || new Date(e.sitzungen.zugriff_bis).getTime() <= Date.now()) return { fehler: 'Das Zugriffsfenster ist nicht (mehr) offen.' }
@@ -301,7 +301,7 @@ export async function einladungErneutSendenAction(einladungId: string): Promise<
       anrede: `Guten Tag ${e.profiles.vorname} ${e.profiles.nachname},`,
       gremium: e.sitzungen.gremien?.name ?? '', titel: e.sitzungen.titel, datum: e.sitzungen.datum, uhrzeit: e.sitzungen.uhrzeit, ort: e.sitzungen.ort,
       anzahlDokumente: ((e.sitzungen.protokolle ?? []) as R[]).filter(p => p.freigegeben).length,
-      link: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/einladung/${e.token}`, anhangName: anhang?.filename,
+      link: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/einladung/${e.token}`, anhangName: anhang?.filename, kontrolle: !!e.kontrolle,
     })
     const r = await sendeMailMitFehler(e.profiles.email, mail.betreff, mail.text, mail.html, anhang ? [anhang] : [])
     await admin.from('sitzungs_einladungen').update(r.ok ? { gesendet_am: new Date().toISOString(), mail_fehler: null } : { mail_fehler: r.fehler ?? 'unbekannt' }).eq('id', einladungId)

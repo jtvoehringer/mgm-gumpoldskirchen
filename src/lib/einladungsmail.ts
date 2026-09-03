@@ -12,6 +12,7 @@ export type EinladungsDaten = {
   anzahlDokumente: number
   link: string              // persönlicher Bestätigungslink
   anhangName?: string | null // Dateiname der offiziellen Einladung (Anhang)
+  kontrolle?: boolean        // Kontrollkopie an die Verwaltung
 }
 
 function esc(s: string) {
@@ -21,12 +22,13 @@ function esc(s: string) {
 /** Betreff, Text- und HTML-Version der Einladung (GK-CD: Dunkelblau, hellgrüner Balken) */
 export function baueEinladungsmail(d: EinladungsDaten) {
   const wann = `${datumLang(d.datum)}${d.uhrzeit ? `, ${d.uhrzeit.slice(0, 5)} Uhr` : ''}`
-  const betreff = `Sitzungseinladung: ${d.gremium} am ${datumLang(d.datum)}`
+  const betreff = `${d.kontrolle ? 'Kontrollkopie – ' : ''}Sitzungseinladung: ${d.gremium} am ${datumLang(d.datum)}`
   const zugriffBis = `Der Zugriff auf die Unterlagen ist bis 24:00 Uhr am Sitzungstag (${datumLang(d.datum)}) möglich und endet danach automatisch.`
 
   const text = [
     `${d.anrede}`,
     ``,
+    ...(d.kontrolle ? [`KONTROLLKOPIE FÜR DIE VERWALTUNG – diese Einladung ist soeben an die Mitglieder des Gremiums gegangen.`, ``] : []),
     `die Sitzungsunterlagen für die folgende Sitzung stehen bereit:`,
     ``,
     `${d.titel}`,
@@ -51,6 +53,7 @@ export function baueEinladungsmail(d: EinladungsDaten) {
   <tr><td style="background:#004B72;padding:18px 28px"><span style="color:#fff;font-size:18px;font-weight:bold;letter-spacing:.04em;text-transform:uppercase">Sitzungsunterlagen</span><br><span style="color:#c9d4e3;font-size:12px">Marktgemeinde Gumpoldskirchen</span></td></tr>
   <tr><td style="background:#A8C959;height:5px;font-size:0;line-height:0">&nbsp;</td></tr>
   <tr><td style="padding:28px">
+    ${d.kontrolle ? `<p style="margin:0 0 16px;padding:8px 12px;background:#F7ECF1;color:#9F456D;font-size:12.5px;font-weight:bold">KONTROLLKOPIE FÜR DIE VERWALTUNG – diese Einladung ist soeben an die Mitglieder des Gremiums gegangen.</p>` : ''}
     <p style="font-size:15px;margin:0 0 16px">${esc(d.anrede)}</p>
     <p style="font-size:15px;margin:0 0 20px">die Sitzungsunterlagen für die folgende Sitzung stehen bereit:</p>
     <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f3f5f8;border-left:4px solid #A8C959;margin:0 0 24px"><tr><td style="padding:14px 18px">
