@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useState, useTransition } from 'react'
-import { UserPlus, Ban, RotateCcw, Send, Pencil, Check, X, ShieldCheck, ShieldOff, LifeBuoy } from 'lucide-react'
+import { UserPlus, Ban, RotateCcw, Send, Pencil, Check, X, ShieldCheck, ShieldOff, LifeBuoy, KeyRound } from 'lucide-react'
 import { mitgliedAnlegenAction, mitgliedAendernAction, type AktionState } from '../actions'
 import { ROLLEN_LABEL, type Rolle } from '@/lib/auth/rollen'
 import { StatusBadge, Leer } from '@/components/ui'
@@ -132,6 +132,10 @@ export default function MitgliederClient({ mitglieder, gremien, ichId, ichRolle 
                     <button disabled={pending} title="Bearbeiten" className="p-1.5 rounded-md hover:bg-gk-bg text-gk-text-2" onClick={() => { setMeldung({}); setBearbeite(m.id) }}><Pencil size={15} /></button>
                     <button disabled={pending} title="Anmelde-Link senden" className="p-1.5 rounded-md hover:bg-gk-bg text-gk-text-2"
                       onClick={() => { const fd = new FormData(); fd.set('id', m.id); fd.set('was', 'einladung'); aendern(fd) }}><Send size={15} /></button>
+                    {(m.rolle === 'verwaltung' || m.rolle === 'superadmin') && (
+                      <button disabled={pending} title="Passwort setzen (Anmeldung ohne Einmal-Code)" className="p-1.5 rounded-md hover:bg-gk-bg text-gk-text-2"
+                        onClick={() => { const pw = prompt(`Passwort für ${m.vorname} ${m.nachname} festlegen (mind. 10 Zeichen):`); if (!pw) return; const fd = new FormData(); fd.set('id', m.id); fd.set('was', 'passwort'); fd.set('passwort', pw); aendern(fd) }}><KeyRound size={15} /></button>
+                    )}
                     {m.aktiv ? (
                       <button disabled={pending || m.id === ichId} title="Zugriff entziehen" className="p-1.5 rounded-md hover:bg-gk-err-bg text-gk-err-fg disabled:opacity-30"
                         onClick={() => { if (!confirm(`Zugriff für ${m.vorname} ${m.nachname} entziehen?`)) return; const fd = new FormData(); fd.set('id', m.id); fd.set('was', 'deaktivieren'); aendern(fd) }}><Ban size={15} /></button>

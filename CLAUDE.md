@@ -26,3 +26,6 @@
 - Rollen (Migration 005): `superadmin` (ICP-Support, Jörgen) = alle Rechte der Verwaltung (`canAdmin`); die Verwaltung sieht ihn als Badge und kann ihn
   nur aktivieren/deaktivieren (Schild-Icons), Rolle/Daten nicht ändern; nur ein Superadmin kann die Rolle superadmin vergeben. Benutzer anlegen
   verschickt KEINE Mail mehr (`auth.admin.createUser` mit email_confirm) – Anmelde-Link auf Wunsch über das Senden-Symbol (signInWithOtp).
+- Passwort-Anmeldung (03.09.2026): nur für Rollen verwaltung/superadmin – Login-Seite „Anmeldung mit Passwort", eigenes Passwort im Profil
+  (`passwortSetzenAction`, min. 10 Zeichen), Start-Passwort durch Verwaltung im Mitglieder-Screen (Schlüssel-Icon, `was='passwort'`).
+  Mitglieder bleiben beim Einmal-Code. Konten aus der alten Einladungs-Variante müssen `email_confirmed_at` haben, sonst „Signups not allowed" beim Code.

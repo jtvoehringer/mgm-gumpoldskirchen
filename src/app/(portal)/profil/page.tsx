@@ -1,4 +1,5 @@
-import { getProfil, ROLLEN_LABEL } from '@/lib/auth/roles'
+import { getProfil, ROLLEN_LABEL, canAdmin } from '@/lib/auth/roles'
+import PasswortForm from './PasswortForm'
 import { ladeGremien } from '@/lib/protokolle'
 import { PageHeader } from '@/components/ui'
 import ProfilForm from './ProfilForm'
@@ -18,6 +19,13 @@ export default async function ProfilSeite() {
         </dl>
         <ProfilForm profil={{ vorname: profil.vorname, nachname: profil.nachname, funktion: profil.funktion ?? '', fraktion: profil.fraktion ?? '' }} />
       </div>
+      {canAdmin(profil.rolle) && (
+        <div className="card mt-4">
+          <p className="eyebrow mb-1">Anmeldung mit Passwort</p>
+          <p className="text-[13px] text-gk-text-2 mb-4">Als Verwaltung können Sie sich statt mit dem Einmal-Code auch mit E-Mail-Adresse und Passwort anmelden. Der Einmal-Code funktioniert weiterhin.</p>
+          <PasswortForm />
+        </div>
+      )}
     </div>
   )
 }

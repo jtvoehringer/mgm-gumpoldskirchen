@@ -49,6 +49,7 @@ async function benutzerFreigeben(d: { email: string; vorname: string; nachname: 
       const u = liste?.users.find(x => x.email?.toLowerCase() === email)
       if (!u) throw new Error(`Konto konnte nicht angelegt werden: ${error.message}`)
       userId = u.id
+      if (!u.email_confirmed_at) await admin.auth.admin.updateUserById(u.id, { email_confirm: true }).catch(() => null)
     } else {
       userId = data.user.id
     }
@@ -128,9 +129,19 @@ export async function mitgliedAendernAction(_p: AktionState, form: FormData): Pr
       if (pe) return { fehler: pe.message }
       revalidatePath('/verwaltung/mitglieder')
       return { ok: true, info: 'Benutzerdaten gespeichert.' }
+    } else if (was === 'passwort') {
+      // Start-Passwort für ein Verwaltungs-Konto setzen (Passwort-Anmeldung nur für Verwaltung/Superadmin)
+      if (!zielRolle || !canAdmin(zielRolle as Rolle)) return { fehler: 'Passwörter gibt es nur für Verwaltungs-Konten; Mitglieder melden sich mit dem Einmal-Code an.' }
+      const pw = String(form.get('passwort') ?? '')
+      if (pw.length < 10) return { fehler: 'Das Passwort muss mindestens 10 Zeichen lang sein.' }
+      const { error: pe } = await admin.auth.admin.updateUserById(id, { password: pw, email_confirm: true })
+      if (pe) return { fehler: pe.message }
+      return { ok: true, info: 'Passwort gesetzt – die Person kann sich ab sofort mit E-Mail und Passwort anmelden.' }
     } else if (was === 'einladung') {
       const { data: p } = await admin.from('profiles').select('email').eq('id', id).maybeSingle()
       if (!p) return { fehler: 'Benutzer nicht gefunden.' }
+      // Konto ggf. bestätigen (Altbestand aus Einladungs-Variante), sonst lehnt Supabase den Code-Versand ab
+      await admin.auth.admin.updateUserById(id, { email_confirm: true }).catch(() => null)
       // Sendet die Standard-Anmelde-Mail (Code + Link) von Supabase erneut
       const { error: e2 } = await admin.auth.signInWithOtp({ email: (p as R).email, options: { shouldCreateUser: false, emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? ''}/auth/callback` } })
       if (e2) return { fehler: e2.message }
