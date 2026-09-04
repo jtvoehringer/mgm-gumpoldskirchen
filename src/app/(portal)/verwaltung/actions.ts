@@ -216,6 +216,18 @@ export async function protokollFreigabeAction(id: string, freigegeben: boolean):
   } catch (e) { return { fehler: (e as Error).message } }
 }
 
+/** Alle Entwürfe einer Sitzung auf einmal freigeben */
+export async function protokolleAlleFreigebenAction(sitzungId: string): Promise<AktionState> {
+  try {
+    await uploadPflicht()
+    const supabase = await createSupabaseServerClient()
+    const { data, error } = await supabase.from('protokolle').update({ freigegeben: true }).eq('sitzung_id', sitzungId).eq('freigegeben', false).select('id')
+    if (error) return { fehler: error.message }
+    revalidatePath('/verwaltung/sitzungen'); revalidatePath('/protokolle', 'layout'); revalidatePath('/portal')
+    return { ok: true, info: `${(data ?? []).length} Dokument(e) freigegeben.` }
+  } catch (e) { return { fehler: (e as Error).message } }
+}
+
 export async function protokollLoeschenAction(id: string): Promise<AktionState> {
   try {
     await uploadPflicht()

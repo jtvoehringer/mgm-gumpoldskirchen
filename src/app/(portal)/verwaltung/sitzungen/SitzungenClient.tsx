@@ -2,11 +2,11 @@
 
 import { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Upload, FolderUp, FileCheck, Trash2, Eye, EyeOff, FileText, Paperclip, Send, Ban, Undo2, ChevronDown, ChevronUp, RefreshCw, Check, AlertTriangle, Minus } from 'lucide-react'
+import { Plus, Upload, FolderUp, FileCheck, Trash2, Eye, EyeOff, CheckCheck, FileText, Paperclip, Send, Ban, Undo2, ChevronDown, ChevronUp, RefreshCw, Check, AlertTriangle, Minus } from 'lucide-react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 import {
   sitzungAnlegenAction, sitzungLoeschenAction, protokollRegistrierenAction, protokollFreigabeAction, protokollLoeschenAction,
-  sitzungEinladenAction, sitzungZugriffBeendenAction, sitzungZurueckziehenAction, einladungErneutSendenAction, type AktionState,
+  sitzungEinladenAction, sitzungZugriffBeendenAction, sitzungZurueckziehenAction, einladungErneutSendenAction, protokolleAlleFreigebenAction, type AktionState,
 } from '../actions'
 import { datum, groesse, zeit } from '@/lib/format'
 import { StatusBadge, Leer } from '@/components/ui'
@@ -134,7 +134,7 @@ export default function SitzungenClient({ gremien, sitzungen, darfLoeschen }: { 
     e.preventDefault(); setDropAktiv(null)
     const dateien = await dateienAusDrop(e.dataTransfer)
     if (dateien.length === 0) return
-    const freigeben = confirm(`${dateien.length} Datei(en) hochladen – sofort für Mitglieder freigeben?\n\nOK = freigeben · Abbrechen = als Entwurf speichern`)
+    const freigeben = confirm(`${dateien.length} Datei(en) hochladen – für Mitglieder freigeben?\n\nOK = freigeben (empfohlen – sonst sehen Mitglieder die Dokumente NICHT)\nAbbrechen = nur als Entwurf speichern`)
     void hochladen(s, dateien, 'protokoll', freigeben)
   }
 
@@ -181,6 +181,18 @@ export default function SitzungenClient({ gremien, sitzungen, darfLoeschen }: { 
       {liste.length === 0 ? <div className="card"><Leer text="Noch keine Sitzungen angelegt." /></div> : liste.map(s => {
         const status = sitzungStatus(s)
         const freigegeben = s.protokolle.filter(p => p.freigegeben).length
+        const entwuerfe = s.protokolle.length - freigegeben
+        // Einladen – vorher auf Entwürfe hinweisen, die Mitglieder nicht sehen würden
+        const einladen = () => {
+          if (entwuerfe > 0) {
+            const ok = confirm(`ACHTUNG: ${entwuerfe} Dokument(e) dieser Sitzung sind noch ENTWURF und für Mitglieder NICHT sichtbar.\n\nOK = alle Entwürfe jetzt freigeben und einladen\nAbbrechen = nichts tun`)
+            if (!ok) return
+            lauf(async () => { const r = await protokolleAlleFreigebenAction(s.id); if (r.fehler) return r; return sitzungEinladenAction(s.id) })
+            return
+          }
+          if (status === 'entwurf' && !confirm(`Einladung für „${s.titel}" an alle aktiven Mitglieder (${s.gremium.name}) versenden?\n\nZugriff bis 24:00 Uhr am ${datum(s.datum)}.`)) return
+          lauf(() => sitzungEinladenAction(s.id))
+        }
         const mitglieder = s.einladungen.filter(e => !e.kontrolle)
         const bestaetigt = mitglieder.filter(e => e.bestaetigt_am).length
         const geoeffnet = mitglieder.filter(e => e.erste_ansicht_am).length
@@ -196,18 +208,20 @@ export default function SitzungenClient({ gremien, sitzungen, darfLoeschen }: { 
                 <h3 className="text-[16px] font-semibold text-gk-text mt-0.5 flex items-center gap-2">{s.titel} <StatusBadge status={status} /></h3>
                 {s.notiz && <p className="text-[12.5px] text-gk-text-2">{s.notiz}</p>}
                 {offen && <p className="text-[12px] text-gk-text-2 mt-1">Eingeladen am {zeit(s.eingeladen_am)} · Zugriff bis <strong>{zeit(s.zugriff_bis)} Uhr</strong></p>}
+                {entwuerfe > 0 && <p className="text-[12.5px] text-gk-warn-fg bg-gk-warn-bg rounded-md px-2 py-1 mt-1.5 inline-flex items-center gap-1.5"><AlertTriangle size={14} /> {entwuerfe} Dokument{entwuerfe === 1 ? '' : 'e'} als Entwurf – für Mitglieder nicht sichtbar</p>}
                 {status === 'abgelaufen' && <p className="text-[12px] text-gk-text-2 mt-1">{s.zugriff_beendet_am ? `Zugriff vorzeitig beendet am ${zeit(s.zugriff_beendet_am)}` : `Zugriff automatisch beendet am ${zeit(s.zugriff_bis)}`} · für Mitglieder nicht mehr sichtbar</p>}
               </div>
               <div className="flex flex-wrap gap-2">
                 <button onClick={() => { setUploadFuer(s.id); setTimeout(() => fileRef.current?.click(), 0) }} disabled={!!fortschritt} className="btn-secondary !py-1.5"><Upload size={15} /> PDF</button>
                 <button onClick={() => { setUploadFuer(s.id); setTimeout(() => ordnerRef.current?.click(), 0) }} disabled={!!fortschritt} title="Ganzen Ordner hochladen (alle PDFs, auch Unterordner)" className="btn-secondary !py-1.5"><FolderUp size={15} /> Ordner</button>
+                {entwuerfe > 0 && <button disabled={pending} title="Alle Entwürfe dieser Sitzung für Mitglieder freigeben" className="btn-primary !py-1.5" onClick={() => lauf(() => protokolleAlleFreigebenAction(s.id))}><CheckCheck size={15} /> Alle freigeben ({entwuerfe})</button>}
                 <button onClick={() => { setUploadFuer(s.id); setTimeout(() => einladungRef.current?.click(), 0) }} disabled={!!fortschritt} title="Offizielle Einladung mit Tagesordnung (PDF) – wird der Einladungsmail angehängt" className="btn-secondary !py-1.5"><FileCheck size={15} /> {s.protokolle.some(p => p.typ === 'einladung') ? 'Einladung ersetzen' : 'Einladung anhängen'}</button>
                 {status === 'entwurf' && (
                   <button disabled={pending || freigegeben === 0} title={freigegeben === 0 ? 'Zuerst mindestens ein Dokument freigeben' : 'Alle Mitglieder des Gremiums einladen'} className="btn-primary !py-1.5"
-                    onClick={() => { if (!confirm(`Einladung für „${s.titel}" an alle aktiven Mitglieder (${s.gremium.name}) versenden?\n\nZugriff bis 24:00 Uhr am ${datum(s.datum)}.`)) return; lauf(() => sitzungEinladenAction(s.id)) }}><Send size={15} /> Einladung versenden</button>
+                    onClick={einladen}><Send size={15} /> Einladung versenden</button>
                 )}
                 {offen && <>
-                  <button disabled={pending} title="Nachträglich aufgenommene Mitglieder einladen" className="btn-secondary !py-1.5" onClick={() => lauf(() => sitzungEinladenAction(s.id))}><Send size={15} /> Neue Mitglieder</button>
+                  <button disabled={pending} title="Nachträglich aufgenommene Mitglieder einladen" className="btn-secondary !py-1.5" onClick={einladen}><Send size={15} /> Neue Mitglieder</button>
                   <button disabled={pending} title="Zugriff sofort beenden" className="btn-secondary !py-1.5"
                     onClick={() => { if (!confirm('Zugriff auf die Unterlagen sofort beenden? Die Mitglieder sehen die Sitzung dann nicht mehr.')) return; lauf(() => sitzungZugriffBeendenAction(s.id)) }}><Ban size={15} /> Zugriff beenden</button>
                   {darfLoeschen && bestaetigt === 0 && (
@@ -266,7 +280,7 @@ export default function SitzungenClient({ gremien, sitzungen, darfLoeschen }: { 
         onChange={e => {
           const s = sitzungen.find(x => x.id === uploadFuer)
           if (s && e.target.files?.length) {
-            const freigeben = confirm('Dokument(e) sofort für Mitglieder freigeben?\n\nOK = freigeben · Abbrechen = als Entwurf speichern')
+            const freigeben = confirm('Dokument(e) für Mitglieder freigeben?\n\nOK = freigeben (empfohlen – sonst sehen Mitglieder die Dokumente NICHT)\nAbbrechen = nur als Entwurf speichern')
             void hochladen(s, Array.from(e.target.files), 'protokoll', freigeben)
           }
           e.target.value = ''
@@ -278,7 +292,7 @@ export default function SitzungenClient({ gremien, sitzungen, darfLoeschen }: { 
           if (s && e.target.files?.length) {
             const dateien = Array.from(e.target.files)
             const pdfs = dateien.filter(f => f.type === 'application/pdf' || /\.pdf$/i.test(f.name)).length
-            const freigeben = confirm(`${pdfs} PDF-Datei(en) aus dem Ordner hochladen${dateien.length > pdfs ? ` (${dateien.length - pdfs} andere Dateien werden übersprungen)` : ''} – sofort für Mitglieder freigeben?\n\nOK = freigeben · Abbrechen = als Entwurf speichern`)
+            const freigeben = confirm(`${pdfs} PDF-Datei(en) aus dem Ordner hochladen${dateien.length > pdfs ? ` (${dateien.length - pdfs} andere Dateien werden übersprungen)` : ''} – für Mitglieder freigeben?\n\nOK = freigeben (empfohlen – sonst sehen Mitglieder die Dokumente NICHT)\nAbbrechen = nur als Entwurf speichern`)
             void hochladen(s, dateien, 'protokoll', freigeben)
           }
           e.target.value = ''
