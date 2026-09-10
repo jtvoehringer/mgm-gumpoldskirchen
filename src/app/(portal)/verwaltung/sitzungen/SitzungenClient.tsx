@@ -236,6 +236,21 @@ export default function SitzungenClient({ gremien, sitzungen, darfLoeschen }: { 
               </div>
             </div>
 
+            {status !== 'entwurf' && (
+              <div className="mt-3 pt-3 border-t border-gk-line">
+                <button onClick={() => setNachweisOffen(o => ({ ...o, [s.id]: !o[s.id] }))} className="flex items-center gap-2 text-[12.5px] text-gk-text-1 hover:text-gk-blau">
+                  {zeigeNachweis ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  <span className="font-mono">Nachweis: {mitglieder.length} eingeladen · {bestaetigt} bestätigt · {geoeffnet} geöffnet{fehlgeschlagen ? ` · ${fehlgeschlagen} Mail-Fehler` : ''}</span>
+                </button>
+                {zeigeNachweis && <>
+                  <div className="mt-2 flex gap-2">
+                    <a href={`/api/reports/nachweis/${s.id}?format=pdf`} className="btn-secondary !py-1 !text-[12px]">Nachweis als PDF</a>
+                    <a href={`/api/reports/nachweis/${s.id}?format=csv`} className="btn-secondary !py-1 !text-[12px]">CSV</a>
+                  </div>
+                  <Nachweis s={s} offen={offen} pending={pending} onErneut={e => lauf(() => einladungErneutSendenAction(e.id))} />
+                </>}
+              </div>
+            )}
             {s.protokolle.length === 0 ? <p className="mt-3 text-[12.5px] text-gk-tertiary">Noch kein Dokument – Unterlagen hochladen (PDF, ganzer Ordner oder Dateien/Ordner hierher ziehen) und freigeben, dann einladen.</p> : (
               <ul className="mt-3 divide-y divide-gk-line border-t border-gk-line">
                 {s.protokolle.map(p => (
@@ -256,21 +271,6 @@ export default function SitzungenClient({ gremien, sitzungen, darfLoeschen }: { 
               </ul>
             )}
 
-            {status !== 'entwurf' && (
-              <div className="mt-3">
-                <button onClick={() => setNachweisOffen(o => ({ ...o, [s.id]: !o[s.id] }))} className="flex items-center gap-2 text-[12.5px] text-gk-text-1 hover:text-gk-blau">
-                  {zeigeNachweis ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                  <span className="font-mono">Nachweis: {mitglieder.length} eingeladen · {bestaetigt} bestätigt · {geoeffnet} geöffnet{fehlgeschlagen ? ` · ${fehlgeschlagen} Mail-Fehler` : ''}</span>
-                </button>
-                {zeigeNachweis && <>
-                  <div className="mt-2 flex gap-2">
-                    <a href={`/api/reports/nachweis/${s.id}?format=pdf`} className="btn-secondary !py-1 !text-[12px]">Nachweis als PDF</a>
-                    <a href={`/api/reports/nachweis/${s.id}?format=csv`} className="btn-secondary !py-1 !text-[12px]">CSV</a>
-                  </div>
-                  <Nachweis s={s} offen={offen} pending={pending} onErneut={e => lauf(() => einladungErneutSendenAction(e.id))} />
-                </>}
-              </div>
-            )}
           </section>
         )
       })}
