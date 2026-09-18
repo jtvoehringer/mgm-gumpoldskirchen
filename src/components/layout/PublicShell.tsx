@@ -26,7 +26,7 @@ export default function PublicShell({ children, breit = false }: { children: Rea
 
       <footer className="border-t border-gk-line bg-white">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 flex flex-wrap items-center justify-between gap-3 text-[12px] text-gk-text-2">
-          <span>Marktgemeinde Gumpoldskirchen · Schrannenplatz 1 · 2352 Gumpoldskirchen · <a href="https://www.gumpoldskirchen.at" className="underline underline-offset-2">www.gumpoldskirchen.at</a></span>
+          <span>Marktgemeinde Gumpoldskirchen · K. Schellmanngasse 30 · 2352 Gumpoldskirchen · <a href="https://www.gumpoldskirchen.at" className="underline underline-offset-2">www.gumpoldskirchen.at</a></span>
           <span className="flex items-center gap-4">
             <Link href="/impressum" className="hover:text-gk-text">Impressum</Link>
             <Link href="/datenschutz" className="hover:text-gk-text">Datenschutz</Link>

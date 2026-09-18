@@ -70,7 +70,7 @@ export function baueEinladungsmail(d: EinladungsDaten) {
     <p style="font-size:13px;color:#5b6675;margin:0 0 10px">Dieser Link ist persönlich für Sie bestimmt – bitte nicht weiterleiten. Nach der Bestätigung melden Sie sich mit Ihrer E-Mail-Adresse an (Einmal-Code, kein Passwort).</p>
     <p style="font-size:12px;color:#8a94a3;margin:20px 0 0">Falls die Schaltfläche nicht funktioniert: <a href="${esc(d.link)}" style="color:#004B72">${esc(d.link)}</a></p>
   </td></tr>
-  <tr><td style="border-top:1px solid #dfe4ec;padding:14px 28px;font-size:12px;color:#8a94a3">Marktgemeinde Gumpoldskirchen · Schrannenplatz 1 · 2352 Gumpoldskirchen</td></tr>
+  <tr><td style="border-top:1px solid #dfe4ec;padding:14px 28px;font-size:12px;color:#8a94a3">Marktgemeinde Gumpoldskirchen · K. Schellmanngasse 30 · 2352 Gumpoldskirchen</td></tr>
 </table></td></tr></table></body></html>`
 
   return { betreff, text, html }
