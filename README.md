@@ -18,9 +18,9 @@ Zugang wird von Gemeinderäten beantragt und von der Gemeindeverwaltung **manuel
 ## Einrichtung
 1. `npm install`
 2. `.env.example` nach `.env.local` kopieren und Supabase-Keys eintragen
-3. `supabase/migrations/001_schema.sql` im Supabase SQL Editor ausführen (bzw. bereits per MCP eingespielt)
+3. Migrationen aus `supabase/migrations/` der Reihe nach einspielen (bereits per MCP eingespielt; Stand prüfen mit `npx supabase migration list`)
 4. Supabase → Authentication → Providers → Email: „Confirm email" an, **Signups deaktivieren** (Benutzer entstehen nur über die Freigabe). Site URL und Redirect URL (`https://<domain>/auth/callback`) eintragen.
-5. Ersten Verwaltungs-Benutzer anlegen: Supabase → Authentication → Users → „Invite user", danach das SQL am Ende der Migration ausführen (Rolle `verwaltung`).
+5. Ersten Verwaltungs-Benutzer anlegen: Supabase → Authentication → Users → „Invite user", danach das SQL am Ende von `20260902082732_grundschema.sql` ausführen (Rolle `verwaltung`).
 6. `npm run dev`
 
 ## Ablauf

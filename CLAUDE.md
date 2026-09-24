@@ -5,7 +5,10 @@
 - Kein automatischer Zugang und kein öffentlicher Zugangsantrag mehr (02.09.2026 entfernt, Tabelle `zugangsantraege` bleibt ungenutzt): Benutzer entstehen ausschließlich in `benutzerFreigeben()` (`src/app/(portal)/verwaltung/actions.ts`) über den Service-Role-Client. `shouldCreateUser: false` beim Login beibehalten.
 - Berechtigungen liegen in der DB (RLS + Funktionen `meine_rolle`, `darf_gremium_lesen`, `darf_hochladen`), die Seiten prüfen zusätzlich über `getProfil()`. Neue Tabellen immer mit RLS.
 - Uploads: Browser → Storage-Bucket `protokolle` (Pfad `<gremium>/<jahr>/<sitzung_id>/<datei>`), danach `protokollRegistrierenAction`. Nie Dateien durch Server Actions schleusen (Vercel-Limit).
-- Migrationen nummeriert in `supabase/migrations/`, per Supabase-MCP (`apply_migration`) einspielen, Projekt-Ref `tqkldsdcffeotxeesnen`.
+- Migrationen in `supabase/migrations/` heißen `<version>_<name>.sql` mit der Remote-Version (Zeitstempel), Projekt-Ref `tqkldsdcffeotxeesnen`
+  (bis 24.09.2026 nummeriert 001–007, dann umbenannt; „Migration 002" usw. unten = diese Dateien in Reihenfolge).
+  Einspielen per Supabase-MCP `apply_migration` mit `<name>`, danach die von `list_migrations` gemeldete Version übernehmen und die Datei
+  exakt als `<version>_<name>.sql` speichern – keine eigene Nummer oder Zeitstempel erfinden. Prüfen mit `npx supabase migration list` (lokal = remote).
 - Lieferweg: geänderte Dateien direkt in den Projektordner schreiben; Jörgen pusht mit `push.ps1`.
 - Sitzungsworkflow (Migration 002): Sitzung = Entwurf → Unterlagen hochladen/freigeben → `sitzungEinladenAction` (RPC `sitzung_einladen`:
   Status `eingeladen`, `zugriff_bis` = 24:00 Europe/Vienna am Sitzungstag, je aktivem Mitglied des Gremiums eine Zeile in
