@@ -37,7 +37,12 @@ export default function Datenschutz() {
         <p>Die Unterlagen einer Sitzung sind für die Mitglieder ab dem Versand der Einladung bis 24:00 Uhr am Sitzungstag abrufbar; danach endet der Zugriff automatisch. Die Unterlagen selbst verbleiben bei der Gemeindeverwaltung.</p>
 
         <H>Empfänger und Auftragsverarbeiter</H>
-        <p>Die Anwendung wird im Auftrag der Marktgemeinde von IC&amp;P Consultants e.U. (Österreich) technisch betrieben. Datenbank und Dateiablage werden bei Supabase (Rechenzentrum Frankfurt am Main, Deutschland) gehostet, die Anwendung bei Vercel Inc. (USA; Auslieferung über Rechenzentren in der EU, Datenübermittlung auf Grundlage der EU-Standardvertragsklauseln). Der Versand von E-Mails (Einladungen, Anmelde-Codes) erfolgt über den E-Mail-Dienst der Marktgemeinde. Mit allen Dienstleistern bestehen Vereinbarungen zur Auftragsverarbeitung nach Art. 28 DSGVO. Eine Weitergabe an sonstige Dritte findet nicht statt, außer die Gemeinde ist dazu gesetzlich verpflichtet.</p>
+        <p>Die Anwendung wird im Auftrag der Marktgemeinde von IC&amp;P Consultants e.U. (Österreich) technisch betrieben; mit IC&amp;P besteht eine Vereinbarung zur Auftragsverarbeitung nach Art. 28 DSGVO. IC&amp;P setzt folgende Sub-Auftragsverarbeiter ein, mit denen jeweils ein Auftragsverarbeitungsvertrag (Data Processing Addendum) besteht:</p>
+        <ul className="list-disc pl-5 space-y-1">
+          <li><strong className="text-gk-text">Supabase Pte. Ltd.</strong> (Singapur; Betrieb über Amazon Web Services) – Datenbank, Anmeldung und Dateiablage. Die Verarbeitung erfolgt ausschließlich im Rechenzentrum Frankfurt am Main (EU). Für den Fall eines Zugriffs aus einem Drittland (z. B. Support) stützt sich die Übermittlung auf die EU-Standardvertragsklauseln (Durchführungsbeschluss (EU) 2021/914), die Bestandteil des Auftragsverarbeitungsvertrags mit Supabase sind.</li>
+          <li><strong className="text-gk-text">Vercel Inc.</strong> (USA) – Bereitstellung der Anwendung über ein Content-Delivery-Netz mit Auslieferung aus Rechenzentren in der EU. Vercel ist unter dem EU-U.S. Data Privacy Framework (DPF) zertifiziert; die Übermittlung in die USA erfolgt auf dieser Grundlage (Angemessenheitsbeschluss der EU-Kommission vom 10. Juli 2023), ergänzend sind die EU-Standardvertragsklauseln vereinbart.</li>
+        </ul>
+        <p>Der Versand von E-Mails (Einladungen, Anmelde-Codes) erfolgt über den E-Mail-Dienst der Marktgemeinde. Eine Weitergabe an sonstige Dritte findet nicht statt, außer die Gemeinde ist dazu gesetzlich verpflichtet.</p>
 
         <H>Anmeldung, Cookies</H>
         <p>Die Anmeldung erfolgt mit einem Einmal-Code per E-Mail (Mitglieder) bzw. mit Passwort (Verwaltung). Die Anwendung setzt ausschließlich technisch notwendige Cookies zur Verwaltung der Anmeldesitzung. Es werden keine Analyse-, Tracking- oder Werbe-Cookies eingesetzt und keine Inhalte Dritter (Schriftarten, Plugins) nachgeladen.</p>
@@ -51,7 +56,7 @@ export default function Datenschutz() {
         <H>Sicherheit</H>
         <p>Die Übertragung erfolgt ausschließlich verschlüsselt (HTTPS). Der Zugriff auf Unterlagen ist auf die Mitglieder des jeweiligen Gremiums beschränkt und wird auf Datenbankebene durchgesetzt. Zugänge werden ausschließlich von der Gemeindeverwaltung eingerichtet; ein Zugang kann jederzeit entzogen werden.</p>
 
-        <p className="text-[12.5px] text-gk-text-2 pt-2 border-t border-gk-line">Stand: September 2026</p>
+        <p className="text-[12.5px] text-gk-text-2 pt-2 border-t border-gk-line">Stand: Oktober 2026 – abgestimmt mit dem Datenschutzbeauftragten der Marktgemeinde</p>
       </div>
     </div>
   )
