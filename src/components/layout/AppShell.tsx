@@ -1,5 +1,6 @@
 'use client'
 import Image from 'next/image'
+import Link from 'next/link'
 
 // ── App-Rahmen des Portals ───────────────────────────────────────────────────
 // Dunkelblaue Kopfleiste mit Negativ-Logo (lt. CD), grüner Balken, darunter die
@@ -34,7 +35,11 @@ export default function AppShell({ children, userName, userEmail, rolle, rolleLa
         <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">{children}</div>
         <footer className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-6 pt-2">
           <div className="border-t border-gk-line pt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-2 text-[11.5px] text-gk-text-2">
-            <span>Marktgemeinde Gumpoldskirchen · Sitzungsunterlagen für Gemeinderat und Gemeindevorstand</span>
+            <span className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              <span>Marktgemeinde Gumpoldskirchen · Sitzungsunterlagen für Gemeinderat und Gemeindevorstand</span>
+              <Link href="/impressum" className="hover:text-gk-text underline underline-offset-2">Impressum</Link>
+              <Link href="/datenschutz" className="hover:text-gk-text underline underline-offset-2">Datenschutz</Link>
+            </span>
             <span className="flex items-center gap-2 font-mono text-[10.5px] text-gk-tertiary" title={buildSha ? `Build ${buildSha}` : undefined}>
               <span>powered by</span>
               <Image src="/logos/icp-lockup-inline-navy.svg" alt="ICP Solutions" width={2000} height={432} className="h-[16px] w-auto object-contain" />
